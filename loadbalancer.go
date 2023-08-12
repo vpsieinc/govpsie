@@ -3,6 +3,7 @@ package govpsie
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -15,7 +16,13 @@ type LBsService interface {
 	GetLB(ctx context.Context, lbID string) (*LB, error)
 	CreateLB(ctx context.Context, createLBReq *CreateLBReq) error
 	DeleteLB(ctx context.Context, lbID string) error
+	AddLBRule(ctx context.Context, addRuleReq *AddRuleReq) error
 	DeleteLBRule(ctx context.Context, ruleID string) error
+	AddLBDomain(ctx context.Context, domainAddReq *DomainAddReq) error
+	ReplaceDomain(ctx context.Context, domainId, newDomainId string) error
+	UpdateDomainBackend(ctx context.Context, domainId string, backends []Backend) error
+	UpdateLBDomain(ctx context.Context, domainUpdateReq *DomainUpdateReq) error
+	UpdateLBRules(ctx context.Context, ruleUpdateReq *RuleUpdateReq) error
 	DeleteLBDomain(ctx context.Context, domainID string) error
 	DeleteLBBackend(ctx context.Context, lbBackendID string) error
 }
@@ -61,21 +68,27 @@ type LB struct {
 }
 
 type CreateLBReq struct {
-	Rules              []Rule `json:"rules"`
-	Algorithm          string `json:"algorithm"`
-	CookieName         string `json:"cookieName"`
-	HealthCheckPath    string `json:"healthCheckPath"`
+	Algorithm  string `json:"algorithm"`
+	CookieName string `json:"cookieName"`
+	// HealthCheckPath    string `json:"healthCheckPath"`
 	CookieCheck        bool   `json:"cookieCheck"`
-	RedirectHTTP       bool   `json:"redirectHTTP"`
+	RedirectHTTP       int    `json:"redirectHTTP"`
 	LBName             string `json:"lbName"`
 	ResourceIdentifier string `json:"resourceIdentifier"`
 	DcIdentifier       string `json:"dcIdentifier"`
-	CheckInterval      int    `json:"checkInterval"`
-	FastInterval       int    `json:"fastInterval"`
-	Rise               int    `json:"rise"`
-	Fall               int    `json:"fall"`
+	Rule               []Rule `json:"rules"`
+	// CheckInterval      int    `json:"checkInterval"`
+	// FastInterval       int    `json:"fastInterval"`
+	// Rise               int    `json:"rise"`
+	// Fall               int    `json:"fall"`
 }
 
+type AddRuleReq struct {
+	Scheme    string     `json:"scheme"`
+	FrontPort string     `json:"frontPort"`
+	LbId      string     `json:"lbId"`
+	Domains   []LBDomain `json:"domains"`
+}
 type Rule struct {
 	Scheme     string     `json:"scheme"`
 	FrontPort  string     `json:"frontPort"`
@@ -106,6 +119,14 @@ type LBDataCenter struct {
 	IsDeleted  int    `json:"is_deleted"`
 }
 
+type RuleUpdateReq struct {
+	RuleID    string    `json:"ruleId"`
+	Backends  []Backend `json:"backends"`
+	BackPort  int       `json:"backPort"`
+	Scheme    string    `json:"scheme"`
+	FrontPort int       `json:"frontPort"`
+}
+
 type LBOffers struct {
 	Cpu         int    `json:"cpu"`
 	Ram         int    `json:"ram"`
@@ -118,6 +139,32 @@ type LBOffers struct {
 	NetSpeed    int    `json:"net_speed"`
 	Category    string `json:"category"`
 	Description string `json:"description"`
+}
+
+type DomainAddReq struct {
+	RuleID       string    `json:"ruleId"`
+	DomainName   string    `json:"domainName"`
+	DomainID     string    `json:"domainId"`
+	Algorithm    string    `json:"algorithm"`
+	RedirectHTTP int       `json:"redirectHTTP"`
+	CookieCheck  bool      `json:"cookieCheck"`
+	CookieName   string    `json:"cookieName"`
+	BackPort     int       `json:"backPort"`
+	Backends     []Backend `json:"backends"`
+}
+
+type DomainUpdateReq struct {
+	DomainID      string `json:"domainId"`
+	Subdomain     string `json:"subdomain"`
+	Algorithm     string `json:"algorithm"`
+	RedirectHTTP  int    `json:"redirectHTTP"`
+	CookieCheck   bool   `json:"cookieCheck"`
+	CookieName    string `json:"cookieName"`
+	BackPort      int    `json:"backPort"`
+	CheckInterval int    `json:"checkInterval"`
+	FastInterval  int    `json:"fastInterval"`
+	Rise          int    `json:"rise"`
+	Fall          int    `json:"fall"`
 }
 
 type ListOffersRoot struct {
@@ -176,6 +223,7 @@ func (l *lbsServiceHandler) ListLBDataCenters(ctx context.Context, options *List
 func (l *lbsServiceHandler) CreateLB(ctx context.Context, createLBReq *CreateLBReq) error {
 	path := fmt.Sprintf("%s/create", lbPath)
 
+	log.Println("createLBReq", createLBReq)
 	req, err := l.client.NewRequest(ctx, http.MethodPost, path, createLBReq)
 	if err != nil {
 		return err
@@ -195,6 +243,17 @@ func (l *lbsServiceHandler) DeleteLB(ctx context.Context, lbID string) error {
 	return l.client.Do(ctx, req, nil)
 }
 
+func (l *lbsServiceHandler) AddLBRule(ctx context.Context, addRuleReq *AddRuleReq) error {
+	path := fmt.Sprintf("%s/rule/add", lbPath)
+
+	req, err := l.client.NewRequest(ctx, http.MethodPost, path, addRuleReq)
+	if err != nil {
+		return err
+	}
+
+	return l.client.Do(ctx, req, nil)
+}
+
 func (l *lbsServiceHandler) DeleteLBRule(ctx context.Context, ruleID string) error {
 	path := fmt.Sprintf("%s/delete/rule", lbPath)
 	delReq := struct {
@@ -204,6 +263,78 @@ func (l *lbsServiceHandler) DeleteLBRule(ctx context.Context, ruleID string) err
 	}
 
 	req, err := l.client.NewRequest(ctx, http.MethodDelete, path, delReq)
+	if err != nil {
+		return err
+	}
+
+	return l.client.Do(ctx, req, nil)
+}
+
+func (l *lbsServiceHandler) AddLBDomain(ctx context.Context, domainAddReq *DomainAddReq) error {
+	path := fmt.Sprintf("%s/domain/add", lbPath)
+
+	req, err := l.client.NewRequest(ctx, http.MethodPost, path, domainAddReq)
+	if err != nil {
+		return err
+	}
+
+	return l.client.Do(ctx, req, nil)
+
+}
+
+func (l *lbsServiceHandler) ReplaceDomain(ctx context.Context, domainId, newDomainId string) error {
+	path := fmt.Sprintf("%s/domain/replace", lbPath)
+
+	domainReplaceReq := struct {
+		DomainID    string `json:"domainId"`
+		NewDomainID string `json:"newDomainId"`
+	}{
+		DomainID:    domainId,
+		NewDomainID: newDomainId,
+	}
+
+	req, err := l.client.NewRequest(ctx, http.MethodPost, path, domainReplaceReq)
+	if err != nil {
+		return err
+	}
+
+	return l.client.Do(ctx, req, nil)
+}
+
+func (l *lbsServiceHandler) UpdateDomainBackend(ctx context.Context, domainId string, backends []Backend) error {
+	path := fmt.Sprintf("%s/backend/update", lbPath)
+
+	updateDomainBackendReq := struct {
+		DomainID string    `json:"domainId"`
+		Backends []Backend `json:"backends"`
+	}{
+		DomainID: domainId,
+		Backends: backends,
+	}
+
+	req, err := l.client.NewRequest(ctx, http.MethodPost, path, updateDomainBackendReq)
+	if err != nil {
+		return err
+	}
+
+	return l.client.Do(ctx, req, nil)
+}
+
+func (l *lbsServiceHandler) UpdateLBRules(ctx context.Context, ruleUpdateReq *RuleUpdateReq) error {
+	path := fmt.Sprintf("%s/rule/update", lbPath)
+
+	req, err := l.client.NewRequest(ctx, http.MethodPost, path, ruleUpdateReq)
+	if err != nil {
+		return err
+	}
+
+	return l.client.Do(ctx, req, nil)
+}
+
+func (l *lbsServiceHandler) UpdateLBDomain(ctx context.Context, domainUpdateReq *DomainUpdateReq) error {
+	path := fmt.Sprintf("%s/domain/update", lbPath)
+
+	req, err := l.client.NewRequest(ctx, http.MethodPost, path, domainUpdateReq)
 	if err != nil {
 		return err
 	}
