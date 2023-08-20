@@ -46,6 +46,8 @@ type Client struct {
 	Logs          LogsService
 	DataCenter    DataCenterService
 	LB LBsService
+	Scripts ScriptsService
+	Pending PendingService
 }
 
 type ErrorRsp struct {
