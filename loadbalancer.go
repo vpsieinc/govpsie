@@ -172,6 +172,37 @@ type ListOffersRoot struct {
 	Data  []LBOffers `json:"Data"`
 }
 
+type PendingLB struct {
+	ID   string `json:"id"`
+	User struct {
+	} `json:"user"`
+	UserID int `json:"user_id"`
+	Data   struct {
+		Algorithm          string        `json:"algorithm"`
+		LbName             string        `json:"lbName"`
+		Rules              []interface{} `json:"rules"`
+		DcIdentifier       string        `json:"dcIdentifier"`
+		ResourceIdentifier string        `json:"resourceIdentifier"`
+		CookieName         string        `json:"cookieName"`
+		RedirectHTTP       int           `json:"redirectHTTP"`
+		CookieCheck        bool          `json:"cookieCheck"`
+		RequestIP          string        `json:"requestIp"`
+		PrivateIps         []interface{} `json:"privateIps"`
+	} `json:"data"`
+	ResourceData struct {
+	} `json:"resourceData"`
+	Datacenter []interface{} `json:"datacenter"`
+	OsData     struct {
+	} `json:"osData"`
+	Running int    `json:"running"`
+	Type    string `json:"type"`
+}
+
+type PendingLBRoot struct{
+	Error bool `json:"error"`
+	Data  [][]PendingLB `json:"data"`
+}
+
 func (l *lbsServiceHandler) ListLBs(ctx context.Context, options *ListOptions) ([]LB, error) {
 	path := fmt.Sprintf("%s/all?sortField=created_on&sortDirection=DESC", lbPath)
 
@@ -404,4 +435,25 @@ func (l *lbsServiceHandler) AddRuleToLB(ctx context.Context, lbID string, rule *
 
 func (l *lbsServiceHandler) AddDomainToRule(ctx context.Context, lbID string, domain *LBDomain) error {
 	return nil
+}
+
+
+func (l *lbsServiceHandler) ListPendingLBs(ctx context.Context) ([]PendingLB, error) {
+	path := fmt.Sprint("/api/v2/lbs/pending")
+
+	req, err := l.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	pendingLbs := new(PendingLBRoot)
+	if err := l.client.Do(ctx, req, pendingLbs); err != nil {
+		return nil, err
+	}
+
+	if len(pendingLbs.Data) == 0 {
+		return []PendingLB{}, nil
+	}
+
+	return pendingLbs.Data[0], nil
 }
