@@ -25,6 +25,7 @@ type LBsService interface {
 	UpdateLBRules(ctx context.Context, ruleUpdateReq *RuleUpdateReq) error
 	DeleteLBDomain(ctx context.Context, domainID string) error
 	DeleteLBBackend(ctx context.Context, lbBackendID string) error
+	ListPendingLBs(ctx context.Context) ([]PendingLB, error)
 }
 
 type lbsServiceHandler struct {
