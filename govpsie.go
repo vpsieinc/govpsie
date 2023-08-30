@@ -102,6 +102,7 @@ func NewClient(httpClient *http.Client) *Client {
 	c.DataCenter = &dataCenterServiceHandler{client: c}
 	c.LB = &lbsServiceHandler{client: c}
 	c.Pending = &pendingServiceHandler{client: c}
+	c.Scripts = &scriptsServiceHandler{client: c}
 
 	c.headers = make(map[string]string)
 	return c
