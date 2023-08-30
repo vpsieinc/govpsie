@@ -11,11 +11,11 @@ type PendingService interface {
 	GetPendingVms(ctx context.Context) ([]PendingVm, error)
 }
 
-type PendingServiceHandler struct {
+type pendingServiceHandler struct {
 	client *Client
 }
 
-var _ ScriptsService = &ScriptsServiceHandler{}
+var _ PendingService = &pendingServiceHandler{}
 
 type PendingVmsRoot struct {
 	Error bool        `json:"error"`
@@ -57,7 +57,7 @@ type PendingVm struct {
 	Type    string `json:"type"`
 }
 
-func (p *PendingServiceHandler) GetPendingVms(ctx context.Context) ([]PendingVm, error) {
+func (p *pendingServiceHandler) GetPendingVms(ctx context.Context) ([]PendingVm, error) {
 	path := fmt.Sprintf("%s/pending", pendingBasePath)
 	req, err := p.client.NewRequest(ctx, "GET", path, nil)
 	if err != nil {
