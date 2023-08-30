@@ -199,8 +199,8 @@ type PendingLB struct {
 	Type    string `json:"type"`
 }
 
-type PendingLBRoot struct{
-	Error bool `json:"error"`
+type PendingLBRoot struct {
+	Error bool          `json:"error"`
 	Data  [][]PendingLB `json:"data"`
 }
 
@@ -437,7 +437,6 @@ func (l *lbsServiceHandler) AddRuleToLB(ctx context.Context, lbID string, rule *
 func (l *lbsServiceHandler) AddDomainToRule(ctx context.Context, lbID string, domain *LBDomain) error {
 	return nil
 }
-
 
 func (l *lbsServiceHandler) ListPendingLBs(ctx context.Context) ([]PendingLB, error) {
 	path := fmt.Sprint("/api/v2/lbs/pending")

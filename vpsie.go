@@ -184,7 +184,7 @@ type CreateVpsieRequest struct {
 	SshKeyIdentifier   string   `json:"sshKeyIdentifier"`
 	ProjectID          int      `json:"projectId"`
 	Tags               []string `json:"tags"`
-	ScriptIdentifier string `json:"scriptIdentifier"`
+	ScriptIdentifier   string   `json:"scriptIdentifier"`
 }
 
 type ActionRequest struct {

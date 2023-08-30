@@ -46,7 +46,7 @@ type ScriptRoot struct {
 
 func (s *ScriptsServiceHandler) GetScripts(ctx context.Context) ([]Script, error) {
 	path := fmt.Sprintf("%s/scripts", scriptsBasePath)
-	
+
 	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func (s *ScriptsServiceHandler) GetScripts(ctx context.Context) ([]Script, error
 
 func (s *ScriptsServiceHandler) GetScript(ctx context.Context, scriptId string) (Script, error) {
 	path := fmt.Sprintf("%s/script/%s", scriptsBasePath, scriptId)
-	
+
 	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return Script{}, err
@@ -81,7 +81,7 @@ func (s *ScriptsServiceHandler) CreateScript(ctx context.Context, createScriptRe
 	if err != nil {
 		return err
 	}
-	
+
 	if err := s.client.Do(ctx, req, nil); err != nil {
 		return err
 	}
