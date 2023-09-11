@@ -18,6 +18,7 @@ type StorageService interface {
 	Update(ctx context.Context, updateReq *StorageUpdateRequest) error
 	Create(ctx context.Context, createReq *StorageCreateRequest, vmIdentifier string) error
 	ListVmsToAttach(ctx context.Context) ([]VmToAttach, error)
+	CreateStorage(ctx context.Context, createReq *StorageCreateRequest) error
 }
 
 type storageServiceHandler struct {
@@ -44,6 +45,8 @@ type Storage struct {
 	OsIdentifier   string `json:"osIdentifier"`
 	State          string `json:"state"`
 	DcIdentifier   string `json:"dcIdentifier"`
+	BusDevice      string `json:"bus_device"`
+	BusNumber      int    `json:"bus_number"`
 }
 
 type ListStorageRoot struct {
@@ -247,4 +250,20 @@ func (s *storageServiceHandler) ListVmsToAttach(ctx context.Context) ([]VmToAtta
 	}
 
 	return vms.Data, nil
+}
+
+func (s *storageServiceHandler) CreateStorage(ctx context.Context, createReq *StorageCreateRequest) error {
+	path := fmt.Sprintf("%s/storages/create/multiple", storageBasePath)
+	fullReq := struct {
+		Storages []StorageCreateRequest `json:"storages"`
+	}{
+		Storages: []StorageCreateRequest{
+			*createReq,
+		},
+	}
+	req, err := s.client.NewRequest(ctx, http.MethodPost, path, fullReq)
+	if err != nil {
+		return err
+	}
+	return s.client.Do(ctx, req, nil)
 }
