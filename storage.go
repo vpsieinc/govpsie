@@ -17,6 +17,7 @@ type StorageService interface {
 	ListAll(ctx context.Context, options *ListOptions) ([]Storage, error)
 	Update(ctx context.Context, updateReq *StorageUpdateRequest) error
 	Create(ctx context.Context, createReq *StorageCreateRequest, vmIdentifier string) error
+	ListVmsToAttach(ctx context.Context) ([]VmToAttach, error)
 }
 
 type storageServiceHandler struct {
@@ -67,6 +68,29 @@ type StorageCreateRequest struct {
 	DiskFormat   string   `json:"diskFormat"`
 	Tags         []string `json:"tags"`
 	IsAutomatic  int      `json:"isAutomatic"`
+}
+
+type VmToAttach struct {
+	Hostname          string      `json:"hostname"`
+	Identifier        string      `json:"identifier"`
+	DatacenterID      int         `json:"datacenter_id"`
+	DefaultIP         string      `json:"default_ip"`
+	DefaultIpv6       string      `json:"default_ipv6"`
+	PrivateIP         interface{} `json:"private_ip"`
+	Ssd               int         `json:"ssd"`
+	State             string      `json:"state"`
+	IsFipAvailable    int         `json:"is_fip_available"`
+	IsBucketAvailable int         `json:"is_bucket_available"`
+	DcIdentifier      string      `json:"dcIdentifier"`
+	Fullname          string      `json:"fullname"`
+	Category          string      `json:"category"`
+	Type              string      `json:"type"`
+}
+
+type ListVmToAttachRoot struct {
+	Error bool         `json:"error"`
+	Data  []VmToAttach `json:"data"`
+	Total int          `json:"total"`
 }
 
 func (s *storageServiceHandler) List(ctx context.Context, options *ListOptions) ([]Storage, error) {
@@ -207,4 +231,20 @@ func (s *storageServiceHandler) Create(ctx context.Context, createReq *StorageCr
 	}
 
 	return s.client.Do(ctx, req, nil)
+}
+
+func (s *storageServiceHandler) ListVmsToAttach(ctx context.Context) ([]VmToAttach, error) {
+	path := fmt.Sprintf("%s/storages/vms", storageBasePath)
+
+	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	vms := new(ListVmToAttachRoot)
+	if err = s.client.Do(ctx, req, &vms); err != nil {
+		return nil, err
+	}
+
+	return vms.Data, nil
 }
