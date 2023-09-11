@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 )
- 
+
 var logsPath = "/apps/v2/logs"
 
 type LogsService interface {

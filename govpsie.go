@@ -45,9 +45,9 @@ type Client struct {
 	Snapshot      SnapshotService
 	Logs          LogsService
 	DataCenter    DataCenterService
-	LB LBsService
-	Scripts ScriptsService
-	Pending PendingService
+	LB            LBsService
+	Scripts       ScriptsService
+	Pending       PendingService
 }
 
 type ErrorRsp struct {
@@ -101,6 +101,8 @@ func NewClient(httpClient *http.Client) *Client {
 	c.Logs = &logsServiceHandler{client: c}
 	c.DataCenter = &dataCenterServiceHandler{client: c}
 	c.LB = &lbsServiceHandler{client: c}
+	c.Pending = &pendingServiceHandler{client: c}
+	c.Scripts = &scriptsServiceHandler{client: c}
 
 	c.headers = make(map[string]string)
 	return c

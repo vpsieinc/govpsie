@@ -14,11 +14,11 @@ type ScriptsService interface {
 	CreateScript(ctx context.Context, createScriptRequest *CreateScriptRequest) error
 }
 
-type ScriptsServiceHandler struct {
+type scriptsServiceHandler struct {
 	client *Client
 }
 
-var _ ScriptsService = &ScriptsServiceHandler{}
+var _ ScriptsService = &scriptsServiceHandler{}
 
 type Script struct {
 	Identifier string `json:"identifier"`
@@ -44,9 +44,9 @@ type ScriptRoot struct {
 	Data  Script `json:"data"`
 }
 
-func (s *ScriptsServiceHandler) GetScripts(ctx context.Context) ([]Script, error) {
+func (s *scriptsServiceHandler) GetScripts(ctx context.Context) ([]Script, error) {
 	path := fmt.Sprintf("%s/scripts", scriptsBasePath)
-	
+
 	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
@@ -59,9 +59,9 @@ func (s *ScriptsServiceHandler) GetScripts(ctx context.Context) ([]Script, error
 	return scripts.Data, nil
 }
 
-func (s *ScriptsServiceHandler) GetScript(ctx context.Context, scriptId string) (Script, error) {
+func (s *scriptsServiceHandler) GetScript(ctx context.Context, scriptId string) (Script, error) {
 	path := fmt.Sprintf("%s/script/%s", scriptsBasePath, scriptId)
-	
+
 	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return Script{}, err
@@ -74,14 +74,14 @@ func (s *ScriptsServiceHandler) GetScript(ctx context.Context, scriptId string) 
 	return script.Data, nil
 }
 
-func (s *ScriptsServiceHandler) CreateScript(ctx context.Context, createScriptRequest *CreateScriptRequest) error {
+func (s *scriptsServiceHandler) CreateScript(ctx context.Context, createScriptRequest *CreateScriptRequest) error {
 	path := fmt.Sprintf("%s/script/add", scriptsBasePath)
 
 	req, err := s.client.NewRequest(ctx, http.MethodPost, path, createScriptRequest)
 	if err != nil {
 		return err
 	}
-	
+
 	if err := s.client.Do(ctx, req, nil); err != nil {
 		return err
 	}
