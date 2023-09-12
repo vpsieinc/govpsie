@@ -63,14 +63,13 @@ type StorageUpdateRequest struct {
 }
 
 type StorageCreateRequest struct {
-	Name         string   `json:"name"`
-	DcIdentifier string   `json:"dcIdentifier"`
-	Description  string   `json:"description"`
-	Size         int      `json:"size"`
-	StorageType  string   `json:"storageType"`
-	DiskFormat   string   `json:"diskFormat"`
-	Tags         []string `json:"tags"`
-	IsAutomatic  int      `json:"isAutomatic"`
+	Name         string `json:"name"`
+	DcIdentifier string `json:"dcIdentifier"`
+	Description  string `json:"description"`
+	Size         int    `json:"size"`
+	StorageType  string `json:"storageType"`
+	DiskFormat   string `json:"diskFormat"`
+	IsAutomatic  int    `json:"isAutomatic"`
 }
 
 type VmToAttach struct {
