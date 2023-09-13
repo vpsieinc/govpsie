@@ -16,7 +16,7 @@ type StorageService interface {
 	CreateContainer(ctx context.Context, dcIdentifier string) error
 	ListAll(ctx context.Context, options *ListOptions) ([]Storage, error)
 	Update(ctx context.Context, updateReq *StorageUpdateRequest) error
-	Create(ctx context.Context, createReq *StorageCreateRequest, vmIdentifier string) error
+	Create(ctx context.Context, createReq *StorageCreateRequest, vmIdentifier string, vmType string) error
 	ListVmsToAttach(ctx context.Context) ([]VmToAttach, error)
 	CreateStorage(ctx context.Context, createReq *StorageCreateRequest) error
 }
@@ -214,17 +214,19 @@ func (s *storageServiceHandler) ListAll(ctx context.Context, options *ListOption
 	return storages.Data, nil
 }
 
-func (s *storageServiceHandler) Create(ctx context.Context, createReq *StorageCreateRequest, vmIdentifier string) error {
+func (s *storageServiceHandler) Create(ctx context.Context, createReq *StorageCreateRequest, vmIdentifier string, vmType string) error {
 	path := fmt.Sprintf("%s/storages/vm/attach/all", storageBasePath)
 
 	createPayload := struct {
 		Storages     []StorageCreateRequest `json:"storages"`
 		VmIdentifier string                 `json:"vmIdentifier"`
+		Type         string                 `json:"type"`
 	}{
 		Storages: []StorageCreateRequest{
 			*createReq,
 		},
 		VmIdentifier: vmIdentifier,
+		Type:         vmType,
 	}
 
 	req, err := s.client.NewRequest(ctx, http.MethodPost, path, createPayload)
