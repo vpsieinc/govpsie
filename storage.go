@@ -11,8 +11,8 @@ var storageBasePath = "/apps/v2"
 type StorageService interface {
 	List(ctx context.Context, options *ListOptions) ([]Storage, error)
 	Delete(ctx context.Context, storageIdentifier string) error
-	AttachToVPSie(ctx context.Context, storageIdentifier, vmIdentifier string) error
-	DetachToVPSie(ctx context.Context, storageIdentifier, vmIdentifier string) error
+	AttachToVPSie(ctx context.Context, storageIdentifier, vmIdentifier string, vmType string) error
+	DetachToVPSie(ctx context.Context, storageIdentifier, vmIdentifier string, vmType string) error
 	CreateContainer(ctx context.Context, dcIdentifier string) error
 	ListAll(ctx context.Context, options *ListOptions) ([]Storage, error)
 	Update(ctx context.Context, updateReq *StorageUpdateRequest) error
@@ -128,16 +128,18 @@ func (s *storageServiceHandler) Delete(ctx context.Context, storageIdentifier st
 	return s.client.Do(ctx, req, nil)
 }
 
-func (s *storageServiceHandler) AttachToVPSie(ctx context.Context, storageIdentifier, vmIdentifier string) error {
+func (s *storageServiceHandler) AttachToVPSie(ctx context.Context, storageIdentifier, vmIdentifier string, vmType string) error {
 
-	path := fmt.Sprintf("%s/vm/attach", storageBasePath)
+	path := fmt.Sprintf("%s/storages/vm/attach", storageBasePath)
 
 	attachReq := struct {
 		StorageIdentifier string `json:"storageIdentifier"`
 		VmIdentifier      string `json:"vmIdentifier"`
+		Type              string `json:"type"`
 	}{
 		StorageIdentifier: storageIdentifier,
 		VmIdentifier:      vmIdentifier,
+		Type:              vmType,
 	}
 
 	req, err := s.client.NewRequest(ctx, http.MethodPost, path, &attachReq)
@@ -149,16 +151,18 @@ func (s *storageServiceHandler) AttachToVPSie(ctx context.Context, storageIdenti
 
 }
 
-func (s *storageServiceHandler) DetachToVPSie(ctx context.Context, storageIdentifier, vmIdentifier string) error {
+func (s *storageServiceHandler) DetachToVPSie(ctx context.Context, storageIdentifier, vmIdentifier string, vmType string) error {
 
-	path := fmt.Sprintf("%s/vm/detach", storageBasePath)
+	path := fmt.Sprintf("%s/storages/vm/detach", storageBasePath)
 
 	detachReq := struct {
 		StorageIdentifier string `json:"storageIdentifier"`
 		VmIdentifier      string `json:"vmIdentifier"`
+		Type              string `json:"type"`
 	}{
 		StorageIdentifier: storageIdentifier,
 		VmIdentifier:      vmIdentifier,
+		Type:              vmType,
 	}
 
 	req, err := s.client.NewRequest(ctx, http.MethodPost, path, &detachReq)
