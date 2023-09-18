@@ -18,6 +18,7 @@ type StorageService interface {
 	Update(ctx context.Context, updateReq *StorageUpdateRequest) error
 	Create(ctx context.Context, createReq *StorageCreateRequest, vmIdentifier string, vmType string) error
 	ListVmsToAttach(ctx context.Context) ([]VmToAttach, error)
+	CreateVolume(ctx context.Context, creatReq *StorageCreateRequest) error
 	CreateStorage(ctx context.Context, createReq *StorageCreateRequest) error
 }
 
@@ -270,5 +271,23 @@ func (s *storageServiceHandler) CreateStorage(ctx context.Context, createReq *St
 	if err != nil {
 		return err
 	}
+	return s.client.Do(ctx, req, nil)
+}
+
+func (s *storageServiceHandler) CreateVolume(ctx context.Context, creatReq *StorageCreateRequest) error {
+	path := fmt.Sprintf("%s/storage/create", storageBasePath)
+	fullReq := struct {
+		Storages []StorageCreateRequest `json:"storages"`
+	}{
+		Storages: []StorageCreateRequest{
+			*creatReq,
+		},
+	}
+
+	req, err := s.client.NewRequest(ctx, http.MethodPost, path, fullReq)
+	if err != nil {
+		return err
+	}
+
 	return s.client.Do(ctx, req, nil)
 }
