@@ -11,12 +11,13 @@ var projectsBasePath = "/apps/v2/projects"
 type ProjectsService interface {
 	List(context.Context, *ListOptions) ([]Project, error)
 	SetDefault(context.Context, string) error
-	Get(context.Context, int) (*Project, error)
+	Get(ctx context.Context, identifer string) (*Project, error)
 	Create(context.Context, *CreateProjectRequest) error
 	ListAnotherVms(context.Context, string) ([]VmData, error)
 	MoveVms(context.Context, string, string) error
 	AssignToVms(ctx context.Context, projectIdentifier, projectId string) error
 	ListDomains(ctx context.Context, projectIdentifier string) ([]Domain, error)
+	Delete(ctx context.Context, id string) error
 }
 
 type projectsServiceHandler struct {
@@ -54,7 +55,7 @@ type Data struct {
 
 type ProjectRoot struct {
 	Error   bool     `json:"error"`
-	Project *Project `json:"project"`
+	Project *Project `json:"data"`
 }
 
 func (p *projectsServiceHandler) List(ctx context.Context, options *ListOptions) ([]Project, error) {
@@ -87,8 +88,19 @@ func (p *projectsServiceHandler) SetDefault(ctx context.Context, projectIdentifi
 	return p.client.Do(ctx, req, nil)
 }
 
-func (p *projectsServiceHandler) Get(ctx context.Context, id int) (*Project, error) {
-	return nil, nil
+func (p *projectsServiceHandler) Get(ctx context.Context, identifer string) (*Project, error) {
+	path := fmt.Sprintf("%s/%s", projectsBasePath, identifer)
+	req, err := p.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	project := new(ProjectRoot)
+	if err := p.client.Do(ctx, req, project); err != nil {
+		return nil, err
+	}
+
+	return project.Project, nil
 }
 
 func (p *projectsServiceHandler) Create(ctx context.Context, projectReq *CreateProjectRequest) error {
@@ -105,7 +117,7 @@ func (p *projectsServiceHandler) Create(ctx context.Context, projectReq *CreateP
 func (p *projectsServiceHandler) ListAnotherVms(ctx context.Context, projectId string) ([]VmData, error) {
 	path := fmt.Sprintf("%s/another/vms?projectId=%s", projectsBasePath, projectId)
 
-	vms := new(ListVpsieRoot)
+	vms := new(ListServerRoot)
 	req, err := p.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
@@ -169,4 +181,15 @@ func (p *projectsServiceHandler) ListDomains(ctx context.Context, projectIdentif
 	}
 
 	return domains.Data, nil
+}
+
+func (p *projectsServiceHandler) Delete(ctx context.Context, id string) error {
+	path := fmt.Sprintf("%s/%s", projectsBasePath, id)
+
+	req, err := p.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	if err != nil {
+		return err
+	}
+
+	return p.client.Do(ctx, req, nil)
 }

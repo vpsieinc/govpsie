@@ -12,7 +12,7 @@ type ImagesService interface {
 	DeleteImage(ctx context.Context, imageIdentifier string) error
 	List(ctx context.Context, options *ListOptions) ([]CustomImage, error)
 	CreateImages(ctx context.Context, dcIdentifier, imageName, imageUrl string) error
-	CreateVPSieByImage(ctx context.Context, createVpsieReq *CreateVpsieRequest) error
+	CreateServerByImage(ctx context.Context, createServerReq *CreateServerRequest) error
 }
 
 type imagesServiceHandler struct {
@@ -99,9 +99,9 @@ func (i *imagesServiceHandler) DeleteImage(ctx context.Context, imageIdentifier 
 	return nil
 }
 
-func (i *imagesServiceHandler) CreateVPSieByImage(ctx context.Context, createVpsieReq *CreateVpsieRequest) error {
+func (i *imagesServiceHandler) CreateServerByImage(ctx context.Context, createServerReq *CreateServerRequest) error {
 	path := fmt.Sprintf("%s/vm", imagesPath)
-	req, err := i.client.NewRequest(ctx, http.MethodPost, path, createVpsieReq)
+	req, err := i.client.NewRequest(ctx, http.MethodPost, path, createServerReq)
 	if err != nil {
 		return err
 	}

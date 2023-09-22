@@ -31,7 +31,7 @@ type Client struct {
 	// services
 	Account       AccountService
 	Project       ProjectsService
-	Vpsie         VpsieService
+	Server        ServerService
 	Image         ImagesService
 	SShKey        SshkeysService
 	Profile       ProfilesService
@@ -86,7 +86,7 @@ func NewClient(httpClient *http.Client) *Client {
 
 	c.Account = &accountServiceHandler{client: c}
 	c.Project = &projectsServiceHandler{client: c}
-	c.Vpsie = &vpsieServiceHandler{client: c}
+	c.Server = &serverServiceHandler{client: c}
 	c.Image = &imagesServiceHandler{client: c}
 	c.SShKey = &sshkeysServiceHandler{client: c}
 	c.Profile = &profilesServiceHandler{client: c}

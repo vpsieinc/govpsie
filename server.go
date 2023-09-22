@@ -6,46 +6,51 @@ import (
 	"net/http"
 )
 
-var vpsieBasePath = "/apps/v2/vm"
+var serverBasePath = "/apps/v2/vm"
 
-type VpsieService interface {
-	ListVpsie(context.Context, *ListOptions, string) ([]VmData, error)
+type ServerService interface {
+	ListServer(context.Context, *ListOptions, string) ([]VmData, error)
 	List(context.Context, *ListOptions) ([]VmData, error)
-	GetVpsieByIdentifier(context.Context, string) (*VmData, error)
-	GetVpsieStatusByIdentifier(context.Context, string) (*Status, error)
-	GetVpsieConsole(ctx context.Context, identifierId string) (*VpsieConsole, error)
-	CreateVpsie(context.Context, *CreateVpsieRequest) error
-	DeleteVpsie(ctx context.Context, identifierId string) error
-	StartVpsie(ctx context.Context, identifierId string) error
-	StopVpsie(ctx context.Context, identifierId string) error
-	RestartVpsie(ctx context.Context, identifierId string) error
+	GetServerByIdentifier(context.Context, string) (*VmData, error)
+	GetServerStatusByIdentifier(context.Context, string) (*Status, error)
+	GetServerConsole(ctx context.Context, identifierId string) (*ServerConsole, error)
+	CreateServer(context.Context, *CreateServerRequest) error
+	DeleteServer(ctx context.Context, identifierId string) error
+	StartServer(ctx context.Context, identifierId string) error
+	StopServer(ctx context.Context, identifierId string) error
+	RestartServer(ctx context.Context, identifierId string) error
 	ChangePassword(ctx context.Context, identifierId string, newPassword string) error
 	ChangeHostName(ctx context.Context, identifierId string, newHostname string) error
 	AddVPC(ctx context.Context, request *VpcRequest) error
 	MoveVPC(ctx context.Context, request *VpcRequest) error
 	AddTags(ctx context.Context, identifierId string, tags []string) error
-	ResizeVpsie(ctx context.Context, identifierId, cpu, ram string) error
+	ResizeServer(ctx context.Context, identifierId, cpu, ram string) error
 	AddSsh(ctx context.Context, identifierId, sshKeyIdentifier string) error
 	AddScript(ctx context.Context, identifierId, scriptIdentifier string) error
-	ToggleLock(ctx context.Context, identifierId string) error
+	Lock(ctx context.Context, identifierId string) error
+	UnLock(ctx context.Context, identifierId string) error
 	DoMultiActions(ctx context.Context, vmsIdentifiers []string, actionType, sshKeyIdentifier string) error
 	EnableIpv6(ctx context.Context, identifierId string) error
+	EnableIpv4(ctx context.Context, identifierId string) error
 	AddFip(ctx context.Context, identifierId, dcIdentifier string) error
+	Resume(ctx context.Context, resumeReq *ResumeReq) error
+	ResetNetwork(ctx context.Context, vmIdentifier string) error
+	EditTag(ctx context.Context, tags []string, vmIdentifer string) error
 }
 
-type vpsieServiceHandler struct {
+type serverServiceHandler struct {
 	client *Client
 }
 
-var _ VpsieService = &vpsieServiceHandler{}
+var _ ServerService = &serverServiceHandler{}
 
-type ListVpsieRoot struct {
+type ListServerRoot struct {
 	Error bool     `json:"error"`
 	Data  []VmData `json:"data"`
 	Total int      `json:"total"`
 }
 
-type ListVpsieByIdentifierRoot struct {
+type ListServerByIdentifierRoot struct {
 	Error bool `json:"error"`
 	Data  struct {
 		VmData          VmData            `json:"vmData"`
@@ -156,12 +161,12 @@ type GetStatusRoot struct {
 	Status Status `json:"data"`
 }
 
-type VpsieConsoleRoot struct {
-	Error        bool         `json:"error"`
-	VpsieConsole VpsieConsole `json:"data"`
+type ServerConsoleRoot struct {
+	Error         bool          `json:"error"`
+	ServerConsole ServerConsole `json:"data"`
 }
 
-type VpsieConsole struct {
+type ServerConsole struct {
 	Upid     string `json:"upid"`
 	Ticket   string `json:"ticket"`
 	Cert     string `json:"cert"`
@@ -172,7 +177,7 @@ type VpsieConsole struct {
 	Fullname string `json:"fullname"`
 }
 
-type CreateVpsieRequest struct {
+type CreateServerRequest struct {
 	ResourceIdentifier string   `json:"resourceIdentifier"`
 	OsIdentifier       string   `json:"osIdentifier"`
 	DcIdentifier       string   `json:"dcIdentifier"`
@@ -198,53 +203,62 @@ type VpcRequest struct {
 	DcIdentifier string `json:"dcIdentifier"`
 }
 
-func (v *vpsieServiceHandler) ListVpsie(ctx context.Context, options *ListOptions, projectId string) ([]VmData, error) {
-	path := fmt.Sprintf("%s?projectId=%s", vpsieBasePath, projectId)
+type ResumeReq struct {
+	VmIdentifier     string `json:"vmIdentifier"`
+	OsIdentifier     string `json:"osIdentifier"`
+	ScriptIdentifier string `json:"scriptIdentifier"`
+	SshKeyIdentifier string `json:"sshKeyIdentifier"`
+	HostName         string `json:"hostname"`
+	Password         string `json:"password"`
+	IsOnPremise      bool   `json:"isOnPremise"`
+}
+
+func (v *serverServiceHandler) ListServer(ctx context.Context, options *ListOptions, projectId string) ([]VmData, error) {
+	path := fmt.Sprintf("%s?projectId=%s", serverBasePath, projectId)
 	req, err := v.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	vpsies := new(ListVpsieRoot)
-	if err = v.client.Do(ctx, req, vpsies); err != nil {
+	servers := new(ListServerRoot)
+	if err = v.client.Do(ctx, req, servers); err != nil {
 		return nil, err
 	}
 
-	return vpsies.Data, nil
+	return servers.Data, nil
 }
 
-func (v *vpsieServiceHandler) List(ctx context.Context, options *ListOptions) ([]VmData, error) {
-	path := fmt.Sprintf("%s", vpsieBasePath)
+func (v *serverServiceHandler) List(ctx context.Context, options *ListOptions) ([]VmData, error) {
+	req, err := v.client.NewRequest(ctx, http.MethodGet, serverBasePath, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	Servers := new(ListServerRoot)
+	if err = v.client.Do(ctx, req, Servers); err != nil {
+		return nil, err
+	}
+
+	return Servers.Data, nil
+}
+
+func (v *serverServiceHandler) GetServerByIdentifier(ctx context.Context, identifierId string) (*VmData, error) {
+	path := fmt.Sprintf("%s/%s", serverBasePath, identifierId)
 	req, err := v.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	vpsies := new(ListVpsieRoot)
-	if err = v.client.Do(ctx, req, vpsies); err != nil {
+	Servers := new(ListServerByIdentifierRoot)
+	if err = v.client.Do(ctx, req, Servers); err != nil {
 		return nil, err
 	}
 
-	return vpsies.Data, nil
+	return &Servers.Data.VmData, nil
 }
 
-func (v *vpsieServiceHandler) GetVpsieByIdentifier(ctx context.Context, identifierId string) (*VmData, error) {
-	path := fmt.Sprintf("%s/%s", vpsieBasePath, identifierId)
-	req, err := v.client.NewRequest(ctx, http.MethodGet, path, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	vpsies := new(ListVpsieByIdentifierRoot)
-	if err = v.client.Do(ctx, req, vpsies); err != nil {
-		return nil, err
-	}
-
-	return &vpsies.Data.VmData, nil
-}
-
-func (v *vpsieServiceHandler) GetVpsieStatusByIdentifier(ctx context.Context, identifierId string) (*Status, error) {
-	path := fmt.Sprintf("%s/status/ %s", vpsieBasePath, identifierId)
+func (v *serverServiceHandler) GetServerStatusByIdentifier(ctx context.Context, identifierId string) (*Status, error) {
+	path := fmt.Sprintf("%s/status/ %s", serverBasePath, identifierId)
 	req, err := v.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
@@ -258,23 +272,23 @@ func (v *vpsieServiceHandler) GetVpsieStatusByIdentifier(ctx context.Context, id
 	return &status.Status, nil
 }
 
-func (v *vpsieServiceHandler) GetVpsieConsole(ctx context.Context, identifierId string) (*VpsieConsole, error) {
-	path := fmt.Sprintf("%s/console/%s", vpsieBasePath, identifierId)
+func (v *serverServiceHandler) GetServerConsole(ctx context.Context, identifierId string) (*ServerConsole, error) {
+	path := fmt.Sprintf("%s/console/%s", serverBasePath, identifierId)
 	req, err := v.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	console := new(VpsieConsoleRoot)
+	console := new(ServerConsoleRoot)
 	if err = v.client.Do(ctx, req, console); err != nil {
 		return nil, err
 	}
 
-	return &console.VpsieConsole, nil
+	return &console.ServerConsole, nil
 }
 
-func (v *vpsieServiceHandler) CreateVpsie(ctx context.Context, vpsie *CreateVpsieRequest) error {
-	req, err := v.client.NewRequest(ctx, http.MethodPost, vpsieBasePath, vpsie)
+func (v *serverServiceHandler) CreateServer(ctx context.Context, server *CreateServerRequest) error {
+	req, err := v.client.NewRequest(ctx, http.MethodPost, serverBasePath, server)
 	if err != nil {
 		return err
 	}
@@ -286,11 +300,11 @@ func (v *vpsieServiceHandler) CreateVpsie(ctx context.Context, vpsie *CreateVpsi
 	return nil
 }
 
-func (v *vpsieServiceHandler) DeleteVpsie(ctx context.Context, identifierId string) error {
+func (v *serverServiceHandler) DeleteServer(ctx context.Context, identifierId string) error {
 	vmIdentifier := &ActionRequest{
 		VmIdentifier: identifierId,
 	}
-	req, err := v.client.NewRequest(ctx, http.MethodDelete, vpsieBasePath, vmIdentifier)
+	req, err := v.client.NewRequest(ctx, http.MethodDelete, serverBasePath, vmIdentifier)
 	if err != nil {
 		return err
 	}
@@ -302,12 +316,12 @@ func (v *vpsieServiceHandler) DeleteVpsie(ctx context.Context, identifierId stri
 	return nil
 }
 
-func (v *vpsieServiceHandler) StartVpsie(ctx context.Context, identifierId string) error {
+func (v *serverServiceHandler) StartServer(ctx context.Context, identifierId string) error {
 	vmIdentifier := &ActionRequest{
 		VmIdentifier: identifierId,
 	}
 
-	path := fmt.Sprintf("%s/start", vpsieBasePath)
+	path := fmt.Sprintf("%s/start", serverBasePath)
 	req, err := v.client.NewRequest(ctx, http.MethodPost, path, vmIdentifier)
 	if err != nil {
 		return err
@@ -320,12 +334,12 @@ func (v *vpsieServiceHandler) StartVpsie(ctx context.Context, identifierId strin
 	return nil
 }
 
-func (v *vpsieServiceHandler) StopVpsie(ctx context.Context, identifierId string) error {
+func (v *serverServiceHandler) StopServer(ctx context.Context, identifierId string) error {
 	vmIdentifier := &ActionRequest{
 		VmIdentifier: identifierId,
 	}
 
-	path := fmt.Sprintf("%s/stop", vpsieBasePath)
+	path := fmt.Sprintf("%s/stop", serverBasePath)
 	req, err := v.client.NewRequest(ctx, http.MethodPost, path, vmIdentifier)
 	if err != nil {
 		return err
@@ -338,11 +352,11 @@ func (v *vpsieServiceHandler) StopVpsie(ctx context.Context, identifierId string
 	return nil
 }
 
-func (v *vpsieServiceHandler) RestartVpsie(ctx context.Context, identifierId string) error {
+func (v *serverServiceHandler) RestartServer(ctx context.Context, identifierId string) error {
 	vmIdentifier := &ActionRequest{
 		VmIdentifier: identifierId,
 	}
-	path := fmt.Sprintf("%s/restart", vpsieBasePath)
+	path := fmt.Sprintf("%s/restart", serverBasePath)
 	req, err := v.client.NewRequest(ctx, http.MethodPost, path, vmIdentifier)
 	if err != nil {
 		return err
@@ -355,7 +369,7 @@ func (v *vpsieServiceHandler) RestartVpsie(ctx context.Context, identifierId str
 	return nil
 }
 
-func (v *vpsieServiceHandler) ChangePassword(ctx context.Context, identifierId string, newPassword string) error {
+func (v *serverServiceHandler) ChangePassword(ctx context.Context, identifierId string, newPassword string) error {
 	changePassReq := struct {
 		VmIdentifier string `json:"vmIdentifier"`
 		NewPassword  string `json:"newpassword"`
@@ -363,7 +377,7 @@ func (v *vpsieServiceHandler) ChangePassword(ctx context.Context, identifierId s
 		VmIdentifier: identifierId,
 		NewPassword:  newPassword,
 	}
-	path := fmt.Sprintf("%s/changepass", vpsieBasePath)
+	path := fmt.Sprintf("%s/changepass", serverBasePath)
 	req, err := v.client.NewRequest(ctx, http.MethodPost, path, changePassReq)
 	if err != nil {
 		return err
@@ -376,7 +390,7 @@ func (v *vpsieServiceHandler) ChangePassword(ctx context.Context, identifierId s
 	return nil
 }
 
-func (v *vpsieServiceHandler) ChangeHostName(ctx context.Context, identifierId string, newHostname string) error {
+func (v *serverServiceHandler) ChangeHostName(ctx context.Context, identifierId string, newHostname string) error {
 	changeHostNameReq := struct {
 		VmIdentifier string `json:"vmIdentifier"`
 		Hostname     string `json:"hostname"`
@@ -384,7 +398,7 @@ func (v *vpsieServiceHandler) ChangeHostName(ctx context.Context, identifierId s
 		VmIdentifier: identifierId,
 		Hostname:     newHostname,
 	}
-	path := fmt.Sprintf("%s/changehostname", vpsieBasePath)
+	path := fmt.Sprintf("%s/changehostname", serverBasePath)
 	req, err := v.client.NewRequest(ctx, http.MethodPost, path, changeHostNameReq)
 	if err != nil {
 		return err
@@ -397,8 +411,8 @@ func (v *vpsieServiceHandler) ChangeHostName(ctx context.Context, identifierId s
 	return nil
 }
 
-func (v *vpsieServiceHandler) AddVPC(ctx context.Context, request *VpcRequest) error {
-	path := fmt.Sprintf("%s/add/vpc", vpsieBasePath)
+func (v *serverServiceHandler) AddVPC(ctx context.Context, request *VpcRequest) error {
+	path := fmt.Sprintf("%s/add/vpc", serverBasePath)
 
 	req, err := v.client.NewRequest(ctx, http.MethodPost, path, request)
 	if err != nil {
@@ -412,8 +426,8 @@ func (v *vpsieServiceHandler) AddVPC(ctx context.Context, request *VpcRequest) e
 	return nil
 }
 
-func (v *vpsieServiceHandler) MoveVPC(ctx context.Context, request *VpcRequest) error {
-	path := fmt.Sprintf("%s/vpc/move", vpsieBasePath)
+func (v *serverServiceHandler) MoveVPC(ctx context.Context, request *VpcRequest) error {
+	path := fmt.Sprintf("%s/vpc/move", serverBasePath)
 
 	req, err := v.client.NewRequest(ctx, http.MethodPost, path, request)
 	if err != nil {
@@ -427,10 +441,10 @@ func (v *vpsieServiceHandler) MoveVPC(ctx context.Context, request *VpcRequest) 
 	return nil
 }
 
-func (v *vpsieServiceHandler) ResizeVpsie(ctx context.Context, identifierId, cpu, ram string) error {
-	path := fmt.Sprintf("%s/resize", vpsieBasePath)
+func (v *serverServiceHandler) ResizeServer(ctx context.Context, identifierId, cpu, ram string) error {
+	path := fmt.Sprintf("%s/resize", serverBasePath)
 
-	resizeVpsie := struct {
+	resizeServer := struct {
 		VmIdentifier string `json:"vmIdentifier"`
 		Ram          string `json:"ram"`
 		Cpu          string `json:"cup"`
@@ -440,7 +454,7 @@ func (v *vpsieServiceHandler) ResizeVpsie(ctx context.Context, identifierId, cpu
 		Cpu:          cpu,
 	}
 
-	req, err := v.client.NewRequest(ctx, http.MethodPost, path, resizeVpsie)
+	req, err := v.client.NewRequest(ctx, http.MethodPost, path, resizeServer)
 	if err != nil {
 		return err
 	}
@@ -452,8 +466,8 @@ func (v *vpsieServiceHandler) ResizeVpsie(ctx context.Context, identifierId, cpu
 	return nil
 }
 
-func (v *vpsieServiceHandler) AddTags(ctx context.Context, identifierId string, tags []string) error {
-	path := fmt.Sprintf("%s/addtags", vpsieBasePath)
+func (v *serverServiceHandler) AddTags(ctx context.Context, identifierId string, tags []string) error {
+	path := fmt.Sprintf("%s/addtags", serverBasePath)
 
 	addTagsRequest := struct {
 		VmIdentifier string   `json:"vmIdentifier"`
@@ -475,8 +489,8 @@ func (v *vpsieServiceHandler) AddTags(ctx context.Context, identifierId string, 
 	return nil
 }
 
-func (v *vpsieServiceHandler) AddSsh(ctx context.Context, identifierId, sshKeyIdentifier string) error {
-	path := fmt.Sprintf("%s/sshkey", vpsieBasePath)
+func (v *serverServiceHandler) AddSsh(ctx context.Context, identifierId, sshKeyIdentifier string) error {
+	path := fmt.Sprintf("%s/sshkey", serverBasePath)
 	addSshReq := struct {
 		VmIdentifier     string `json:"vmIdentifier"`
 		SshKeyIdentifier string `json:"sshKeyIdentifier"`
@@ -497,8 +511,8 @@ func (v *vpsieServiceHandler) AddSsh(ctx context.Context, identifierId, sshKeyId
 	return nil
 }
 
-func (v *vpsieServiceHandler) AddScript(ctx context.Context, identifierId, scriptIdentifier string) error {
-	path := fmt.Sprintf("%s/script", vpsieBasePath)
+func (v *serverServiceHandler) AddScript(ctx context.Context, identifierId, scriptIdentifier string) error {
+	path := fmt.Sprintf("%s/script", serverBasePath)
 	addScriptReq := struct {
 		VmIdentifier     string `json:"vmIdentifier"`
 		ScriptIdentifier string `json:"scriptIdentifier"`
@@ -519,15 +533,15 @@ func (v *vpsieServiceHandler) AddScript(ctx context.Context, identifierId, scrip
 	return nil
 }
 
-func (v *vpsieServiceHandler) ToggleLock(ctx context.Context, identifierId string) error {
-	path := fmt.Sprintf("%s/toggle/lock", vpsieBasePath)
-	addScriptReq := struct {
+func (v *serverServiceHandler) Lock(ctx context.Context, identifierId string) error {
+	path := fmt.Sprintf("%s/lock", serverBasePath)
+	lockReq := struct {
 		VmIdentifier string `json:"vmIdentifier"`
 	}{
 		VmIdentifier: identifierId,
 	}
 
-	req, err := v.client.NewRequest(ctx, http.MethodPost, path, addScriptReq)
+	req, err := v.client.NewRequest(ctx, http.MethodPost, path, lockReq)
 	if err != nil {
 		return err
 	}
@@ -539,9 +553,29 @@ func (v *vpsieServiceHandler) ToggleLock(ctx context.Context, identifierId strin
 	return nil
 }
 
-func (v *vpsieServiceHandler) DoMultiActions(ctx context.Context, vmsIdentifiers []string, actionType, sshKeyIdentifier string) error {
-	path := fmt.Sprintf("%s/actions", vpsieBasePath)
-	addScriptReq := struct {
+func (v *serverServiceHandler) UnLock(ctx context.Context, identifierId string) error {
+	path := fmt.Sprintf("%s/unlock", serverBasePath)
+	unLockReq := struct {
+		VmIdentifier string `json:"vmIdentifier"`
+	}{
+		VmIdentifier: identifierId,
+	}
+
+	req, err := v.client.NewRequest(ctx, http.MethodPost, path, unLockReq)
+	if err != nil {
+		return err
+	}
+
+	if err = v.client.Do(ctx, req, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (v *serverServiceHandler) DoMultiActions(ctx context.Context, vmsIdentifiers []string, actionType, sshKeyIdentifier string) error {
+	path := fmt.Sprintf("%s/actions", serverBasePath)
+	doMultiActionsReq := struct {
 		VmsIdentifiers   []string `json:"vmsIdentifiers"`
 		ActionType       string   `json:"actionType"`
 		SshKeyIdentifier string   `json:"sshKeyIdentifier"`
@@ -551,7 +585,7 @@ func (v *vpsieServiceHandler) DoMultiActions(ctx context.Context, vmsIdentifiers
 		SshKeyIdentifier: sshKeyIdentifier,
 	}
 
-	req, err := v.client.NewRequest(ctx, http.MethodPost, path, addScriptReq)
+	req, err := v.client.NewRequest(ctx, http.MethodPost, path, doMultiActionsReq)
 	if err != nil {
 		return err
 	}
@@ -563,9 +597,9 @@ func (v *vpsieServiceHandler) DoMultiActions(ctx context.Context, vmsIdentifiers
 	return nil
 }
 
-func (v *vpsieServiceHandler) AddFip(ctx context.Context, identifierId, dcIdentifier string) error {
-	path := fmt.Sprintf("%s/fip/add", vpsieBasePath)
-	addScriptReq := struct {
+func (v *serverServiceHandler) AddFip(ctx context.Context, identifierId, dcIdentifier string) error {
+	path := fmt.Sprintf("%s/fip/add", serverBasePath)
+	addFipReq := struct {
 		VmIdentifier string `json:"vmIdentifier"`
 		DcIdentifier string `json:"dcIdentifier"`
 	}{
@@ -573,7 +607,7 @@ func (v *vpsieServiceHandler) AddFip(ctx context.Context, identifierId, dcIdenti
 		DcIdentifier: dcIdentifier,
 	}
 
-	req, err := v.client.NewRequest(ctx, http.MethodPost, path, addScriptReq)
+	req, err := v.client.NewRequest(ctx, http.MethodPost, path, addFipReq)
 	if err != nil {
 		return err
 	}
@@ -585,15 +619,80 @@ func (v *vpsieServiceHandler) AddFip(ctx context.Context, identifierId, dcIdenti
 	return nil
 }
 
-func (v *vpsieServiceHandler) EnableIpv6(ctx context.Context, identifierId string) error {
-	path := fmt.Sprintf("%s/script", vpsieBasePath)
-	addScriptReq := struct {
+func (v *serverServiceHandler) EnableIpv6(ctx context.Context, identifierId string) error {
+	path := fmt.Sprintf("%s/enable/ipv6", serverBasePath)
+	enableIpv6Req := struct {
 		VmIdentifier string `json:"vmIdentifier"`
 	}{
 		VmIdentifier: identifierId,
 	}
 
-	req, err := v.client.NewRequest(ctx, http.MethodPost, path, addScriptReq)
+	req, err := v.client.NewRequest(ctx, http.MethodPost, path, enableIpv6Req)
+	if err != nil {
+		return err
+	}
+
+	if err = v.client.Do(ctx, req, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (v *serverServiceHandler) EnableIpv4(ctx context.Context, identifierId string) error {
+	path := fmt.Sprintf("%s/enable/ipv4", serverBasePath)
+	enableIpv4Req := struct {
+		VmIdentifier string `json:"vmIdentifier"`
+	}{
+		VmIdentifier: identifierId,
+	}
+
+	req, err := v.client.NewRequest(ctx, http.MethodPost, path, enableIpv4Req)
+	if err != nil {
+		return err
+	}
+
+	if err = v.client.Do(ctx, req, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (v *serverServiceHandler) Resume(ctx context.Context, resumeReq *ResumeReq) error {
+	path := fmt.Sprintf("%s/resume", serverBasePath)
+
+	req, err := v.client.NewRequest(ctx, http.MethodPost, path, resumeReq)
+	if err != nil {
+		return err
+	}
+
+	if err = v.client.Do(ctx, req, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (v *serverServiceHandler) ResetNetwork(ctx context.Context, vmIdentifier string) error {
+	path := fmt.Sprintf("/apps/v2/refresh/vm/ips/%s", vmIdentifier)
+
+	req, err := v.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return err
+	}
+
+	if err = v.client.Do(ctx, req, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (v *serverServiceHandler) EditTag(ctx context.Context, tags []string, vmIdentifer string) error {
+	path := fmt.Sprintf("%s/tags/edit", serverBasePath)
+
+	req, err := v.client.NewRequest(ctx, http.MethodPost, path, nil)
 	if err != nil {
 		return err
 	}

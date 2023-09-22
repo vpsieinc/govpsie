@@ -10,10 +10,23 @@ var backupsPath = "/apps/v2"
 
 type BackupsService interface {
 	List(ctx context.Context, options *ListOptions) ([]Backup, error)
-	DeleteBackup(ctx context.Context, backupIdentifier string) error
+	DeleteBackup(ctx context.Context, backupIdentifier, deleteReason, deleteNote string) error
 	CreateBackups(ctx context.Context, vmIdentifier, name, notes string) error
-	ListByVpsie(ctx context.Context, options *ListOptions, vmIdentifier string) ([]Backup, error)
-	CreateVPSieByBackup(ctx context.Context, backupIdentifier string) error
+	ListByServer(ctx context.Context, options *ListOptions, vmIdentifier string) ([]Backup, error)
+	CreateServerByBackup(ctx context.Context, backupIdentifier string) error
+	Get(ctx context.Context, identifer string) (*Backup, error)
+	EnableAutoBackup(ctx context.Context, enableAutoReq *EnableAutoBackupReq) error
+	Rename(ctx context.Context, backupIdentifier string, newName string) error
+}
+
+type EnableAutoBackupReq struct {
+	VmIdentifier  string   `json:"vmIdentifier"`
+	VmID          int      `json:"vmId"`
+	Period        string   `json:"period"`
+	AutoBackup    int      `json:"autoBackup"`
+	WeeklyBackup  int      `json:"weeklyBackup"`
+	MonthlyBackup int      `json:"monthlyBackup"`
+	Tags          []string `json:"tags"`
 }
 
 type backupsServiceHandler struct {
@@ -26,6 +39,13 @@ type ListBackupsRoot struct {
 	Error bool     `json:"error"`
 	Data  []Backup `json:"data"`
 	Total int      `json:"total "`
+}
+
+type GetBackupsRoot struct {
+	Error bool `json:"error"`
+	Data  struct {
+		Backup Backup `json:"backup"`
+	} `json:"data"`
 }
 
 type Backup struct {
@@ -61,13 +81,24 @@ func (b *backupsServiceHandler) List(ctx context.Context, options *ListOptions) 
 	return backups.Data, nil
 }
 
-func (b *backupsServiceHandler) DeleteBackup(ctx context.Context, backupIdentifier string) error {
+func (b *backupsServiceHandler) DeleteBackup(ctx context.Context, backupIdentifier, deleteReason, deleteNote string) error {
 	path := fmt.Sprintf("%s/backup", backupsPath)
 
 	deleteReq := struct {
 		BackupIdentifier string `json:"backupIdentifier"`
+		DeleteStatistic  struct {
+			Reason string `json:"reason"`
+			Note   string `json:"note"`
+		} `json:"deleteStatistic"`
 	}{
 		BackupIdentifier: backupIdentifier,
+		DeleteStatistic: struct {
+			Reason string `json:"reason"`
+			Note   string `json:"note"`
+		}{
+			Reason: deleteReason,
+			Note:   deleteNote,
+		},
 	}
 
 	req, err := b.client.NewRequest(ctx, http.MethodDelete, path, &deleteReq)
@@ -99,8 +130,8 @@ func (b *backupsServiceHandler) CreateBackups(ctx context.Context, vmIdentifier,
 
 }
 
-func (b *backupsServiceHandler) ListByVpsie(ctx context.Context, options *ListOptions, vpsieId string) ([]Backup, error) {
-	path := fmt.Sprintf("%s/vm/backups/%s", backupsPath, vpsieId)
+func (b *backupsServiceHandler) ListByServer(ctx context.Context, options *ListOptions, serverId string) ([]Backup, error) {
+	path := fmt.Sprintf("%s/vm/backups/%s", backupsPath, serverId)
 
 	req, err := b.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
@@ -115,16 +146,63 @@ func (b *backupsServiceHandler) ListByVpsie(ctx context.Context, options *ListOp
 	return backups.Data, nil
 }
 
-func (b *backupsServiceHandler) CreateVPSieByBackup(ctx context.Context, backupIdentifier string) error {
+func (b *backupsServiceHandler) CreateServerByBackup(ctx context.Context, backupIdentifier string) error {
 	path := fmt.Sprintf("%s/backups/create", backupsPath)
 
-	createVpsieReq := struct {
+	createServerReq := struct {
 		BackupIdentifier string `json:"backupIdentifier"`
 	}{
 		BackupIdentifier: backupIdentifier,
 	}
 
-	req, err := b.client.NewRequest(ctx, http.MethodPost, path, &createVpsieReq)
+	req, err := b.client.NewRequest(ctx, http.MethodPost, path, &createServerReq)
+	if err != nil {
+		return err
+	}
+
+	return b.client.Do(ctx, req, nil)
+}
+
+func (b *backupsServiceHandler) Get(ctx context.Context, identifer string) (*Backup, error) {
+	path := fmt.Sprintf("%s/backup/%s", backupsPath, identifer)
+
+	req, err := b.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	backup := new(GetBackupsRoot)
+	if err = b.client.Do(ctx, req, backup); err != nil {
+		return nil, err
+	}
+
+	return &backup.Data.Backup, nil
+}
+
+func (b *backupsServiceHandler) EnableAutoBackup(ctx context.Context, enableAutoReq *EnableAutoBackupReq) error {
+	path := fmt.Sprintf("%s/backups/enable/auto", backupsPath)
+
+	req, err := b.client.NewRequest(ctx, http.MethodPost, path, enableAutoReq)
+	if err != nil {
+		return err
+	}
+
+	return b.client.Do(ctx, req, nil)
+
+}
+
+func (b *backupsServiceHandler) Rename(ctx context.Context, backupIdentifier string, newName string) error {
+	path := fmt.Sprintf("%s/backups/update/name", backupsPath)
+
+	renameReq := struct {
+		Identifier string `json:"identifier"`
+		NewName    string `json:"new_name"`
+	}{
+		Identifier: backupIdentifier,
+		NewName:    newName,
+	}
+
+	req, err := b.client.NewRequest(ctx, http.MethodPut, path, &renameReq)
 	if err != nil {
 		return err
 	}
