@@ -16,11 +16,15 @@ type DomainService interface {
 	ListDomainVpsies(ctx context.Context, options *ListOptions) ([]DomainVpsie, error)
 	CreateDomain(ctx context.Context, createReq *CreateDomainRequest) error
 	GetDomainByVpsie(ctx context.Context, domainIdentifier string) ([]Domain, error)
-	DeleteDomain(ctx context.Context, domainIdentifier string) error
 	UpdateReverse(ctx context.Context, reverseReq *ReverseRequest) error
 	AddReverse(ctx context.Context, reverseReq *ReverseRequest) error
 	UpdateDomain(ctx context.Context, dnsRecord *DnsRecord, domainIdentifier, vmIdentifier string) error
 	DeleteReverse(ctx context.Context, ip, vmIdentifier string) error
+	CreateDnsRecord(ctx context.Context, createReq CreateDnsRecordReq) error
+	UpdateDnsRecord(ctx context.Context, updateReq *UpdateDnsRecordReq) error
+	DeleteDomain(ctx context.Context, domainIdentifier, reason, note string) error
+	DeleteDnsRecord(ctx context.Context, domainIdentifier string, record *Record) error
+	ListReversePTRRecords(ctx context.Context) ([]ReversePTR, error)
 }
 
 type domainsServiceHandler struct {
@@ -86,6 +90,34 @@ type CreateDomainRequest struct {
 	Domain       string `json:"domain"`
 }
 
+type Record struct {
+	Name    string `json:"name"`
+	Content string `json:"content"`
+	Type    string `json:"type"`
+	TTL     int    `json:"ttl"`
+}
+type CreateDnsRecordReq struct {
+	DomainIdentifier string `json:"domainIdentifier"`
+	Record           Record `json:"record"`
+}
+
+type UpdateDnsRecordReq struct {
+	DomainIdentifier string `json:"domainIdentifier"`
+	Current          Record `json:"current"`
+	New              Record `json:"new"`
+}
+
+type ReversePTR struct {
+	Ip           string `json:"ip"`
+	HostName     string `json:"host_name"`
+	VmIdentifier string `json:"vmIdentifier"`
+	PtrRecord    string `json:"ptrRecord"`
+}
+type ListReversePTRRoot struct {
+	Error bool         `json:"error"`
+	Data  []ReversePTR `json:"data"`
+}
+
 func (d *domainsServiceHandler) ListDomainByProject(ctx context.Context, options *ListOptions, projectIdentifier string) ([]Domain, error) {
 	path := fmt.Sprintf("%s/project/%s?offset=%d&limit%d", domainsPath, projectIdentifier, options.Page, options.PerPage)
 
@@ -100,6 +132,47 @@ func (d *domainsServiceHandler) ListDomainByProject(ctx context.Context, options
 	}
 
 	return domains.Data, nil
+}
+
+func (d *domainsServiceHandler) CreateDnsRecord(ctx context.Context, createReq CreateDnsRecordReq) error {
+	path := fmt.Sprintf("%s/dnsRecord", domainPath)
+
+	req, err := d.client.NewRequest(ctx, http.MethodPost, path, createReq)
+	if err != nil {
+		return err
+	}
+
+	return d.client.Do(ctx, req, nil)
+}
+
+func (d *domainsServiceHandler) UpdateDnsRecord(ctx context.Context, updateReq *UpdateDnsRecordReq) error {
+	path := fmt.Sprintf("%s/dnsRecord/update", domainPath)
+
+	req, err := d.client.NewRequest(ctx, http.MethodPut, path, updateReq)
+	if err != nil {
+		return err
+	}
+
+	return d.client.Do(ctx, req, nil)
+}
+
+func (d *domainsServiceHandler) DeleteDnsRecord(ctx context.Context, domainIdentifier string, record *Record) error {
+	path := fmt.Sprintf("%s/dnsRecord/delete", domainPath)
+
+	updateReq := struct {
+		DomainIdentifier string `json:"domainIdentifier"`
+		Record           Record `json:"record"`
+	}{
+		DomainIdentifier: domainIdentifier,
+		Record:           *record,
+	}
+
+	req, err := d.client.NewRequest(ctx, http.MethodDelete, path, updateReq)
+	if err != nil {
+		return nil
+	}
+
+	return d.client.Do(ctx, req, nil)
 }
 
 func (d *domainsServiceHandler) DnsRecord(ctx context.Context, domainIdentifier string, dnsRecord *DnsRecord) error {
@@ -176,13 +249,24 @@ func (d *domainsServiceHandler) GetDomainByVpsie(ctx context.Context, domainIden
 	return domains.Data, nil
 }
 
-func (d *domainsServiceHandler) DeleteDomain(ctx context.Context, domainIdentifier string) error {
+func (d *domainsServiceHandler) DeleteDomain(ctx context.Context, domainIdentifier, reason, note string) error {
 	path := fmt.Sprintf("%s/delete", domainPath)
 
 	deleteReq := struct {
 		DomainIdentifier string `json:"domainIdentifier"`
+		DeleteStatistic  struct {
+			Reason string `json:"reason"`
+			Note   string `json:"note"`
+		}
 	}{
 		DomainIdentifier: domainIdentifier,
+		DeleteStatistic: struct {
+			Reason string `json:"reason"`
+			Note   string `json:"note"`
+		}{
+			Reason: reason,
+			Note:   note,
+		},
 	}
 
 	req, err := d.client.NewRequest(ctx, http.MethodDelete, path, deleteReq)
@@ -252,4 +336,20 @@ func (d *domainsServiceHandler) DeleteReverse(ctx context.Context, ip, vmIdentif
 	}
 
 	return d.client.Do(ctx, req, nil)
+}
+
+func (d *domainsServiceHandler) ListReversePTRRecords(ctx context.Context) ([]ReversePTR, error) {
+	path := fmt.Sprintf("%s/reverse/all", domainPath)
+
+	req, err := d.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	rv := new(ListReversePTRRoot)
+	if err = d.client.Do(ctx, req, rv); err != nil {
+		return nil, err
+	}
+
+	return rv.Data, nil
 }

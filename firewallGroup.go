@@ -15,6 +15,8 @@ type FirewallGroupService interface {
 	Delete(ctx context.Context, fwGroupId string) error
 	Update(ctx context.Context, fwGroupReq *FirewallUpdateReq, fwGroupId string) error
 	AssignToVpsie(ctx context.Context, groupId string, vmId string) error
+	DeleteFirewallGroupOfServer(ctx context.Context, groupId, vmId string) error
+	GetFirewallGroup(ctx context.Context, fwGroupId string) (*FirewallGroup, error)
 }
 
 type firewallGroupServiceHandler struct {
@@ -140,7 +142,7 @@ func (f *firewallGroupServiceHandler) Delete(ctx context.Context, fwGroupId stri
 }
 
 func (f *firewallGroupServiceHandler) AssignToVpsie(ctx context.Context, groupId string, vmId string) error {
-	path := fmt.Sprintf("%s/attach/group", firewallGroupBasePath)
+	path := fmt.Sprintf("%s/setGroupVm", firewallGroupBasePath)
 
 	assignReq := struct {
 		VmID    string `json:"vmId"`
@@ -162,6 +164,42 @@ func (f *firewallGroupServiceHandler) Update(ctx context.Context, fwGroupReq *Fi
 	path := fmt.Sprintf("%s/groups/%s", firewallGroupBasePath, fwGroupId)
 
 	req, err := f.client.NewRequest(ctx, http.MethodPost, path, fwGroupReq)
+	if err != nil {
+		return err
+	}
+
+	return f.client.Do(ctx, req, nil)
+}
+
+func (f *firewallGroupServiceHandler) GetFirewallGroup(ctx context.Context, fwGroupId string) (*FirewallGroup, error) {
+	path := fmt.Sprintf("%s/group/%s", firewallGroupBasePath, fwGroupId)
+
+	req, err := f.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	fwGroup := new(GetFirewallGroupRoot)
+
+	if err = f.client.Do(ctx, req, fwGroup); err != nil {
+		return nil, err
+	}
+
+	return fwGroup.Data.Group, nil
+}
+
+func (f *firewallGroupServiceHandler) DeleteFirewallGroupOfServer(ctx context.Context, groupId, vmId string) error {
+	path := fmt.Sprintf("%s/firewall/removeGroupVm", firewallGroupBasePath)
+
+	delReq := struct {
+		GroupId string `json:"groupId"`
+		VmId    string `json:"vmId"`
+	}{
+		GroupId: groupId,
+		VmId:    vmId,
+	}
+
+	req, err := f.client.NewRequest(ctx, http.MethodDelete, path, &delReq)
 	if err != nil {
 		return err
 	}
