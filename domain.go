@@ -344,7 +344,7 @@ func (d *domainsServiceHandler) ListReversePTRRecords(ctx context.Context) ([]Re
 	req, err := d.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
-	}
+	} 
 
 	rv := new(ListReversePTRRoot)
 	if err = d.client.Do(ctx, req, rv); err != nil {

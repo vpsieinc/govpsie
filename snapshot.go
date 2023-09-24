@@ -12,8 +12,9 @@ type SnapshotService interface {
 	List(ctx context.Context, options *ListOptions) ([]Snapshot, error)
 	Create(ctx context.Context, name, vmIdentifier string) error
 	ListByVm(ctx context.Context, options *ListOptions, vmIdentifier string) ([]Snapshot, error)
-	Delete(ctx context.Context, snapshotIdentifier string) error
 	Rollback(ctx context.Context, snapshotIdentifier string) error
+	EnableAuto(ctx context.Context, enableReq *EnableAutoSnapshotReq) error
+	Delete(ctx context.Context, snapshotIdentifier, reason, note string) error
 }
 
 type snapshotServiceHandler struct {
@@ -26,12 +27,12 @@ type Snapshot struct {
 	Hostname     string `json:"hostname"`
 	Name         string `json:"name"`
 	Identifier   string `json:"identifier"`
-	BackupKey    string `json:"backup_key"`
+	BackupKey    string `json:"backupKey"`
 	State        string `json:"state"`
-	DcIdentifier string `json:"dc_identifier"`
+	DcIdentifier string `json:"dcIdentifier"`
 	Daily        int    `json:"daily"`
 	IsSnapshot   int    `json:"is_snapshot"`
-	VmIdentifier string `json:"vm_identifier"`
+	VmIdentifier string `json:"vmIdentifier"`
 	BackupSHA1   string `json:"backupsha1"`
 	OSIdentifier string `json:"os_identifier"`
 	UserID       int    `json:"user_id"`
@@ -41,6 +42,16 @@ type ListSnapshotsRoot struct {
 	Error bool       `json:"error"`
 	Data  []Snapshot `json:"data"`
 	Total int        `json:"total"`
+}
+
+type EnableAutoSnapshotReq struct {
+	VMIdentifier    string   `json:"vmIdentifier"`
+	VmId            int      `json:"vmId"`
+	Period          string   `json:"period"`
+	DailySnapshot   int      `json:"dailySnapshot"`
+	WeeklySnapshot  int      `json:"weeklySnapshot"`
+	MonthlySnapshot int      `json:"monthlySnapshot"`
+	Tags            []string `json:"tags"`
 }
 
 func (s *snapshotServiceHandler) List(ctx context.Context, options *ListOptions) ([]Snapshot, error) {
@@ -98,11 +109,22 @@ func (s *snapshotServiceHandler) ListByVm(ctx context.Context, options *ListOpti
 
 }
 
-func (s *snapshotServiceHandler) Delete(ctx context.Context, snapshotIdentifier string) error {
+func (s *snapshotServiceHandler) Delete(ctx context.Context, snapshotIdentifier, reason, note string) error {
 	deleteReq := struct {
 		SnapshotIdentifier string `json:"snapshotIdentifier"`
+		DeleteStatistic struct {
+			Reason string `json:"reason"`
+			Note  string `json:"note"`
+		} `json:"deleteStatistic"`
 	}{
 		SnapshotIdentifier: snapshotIdentifier,
+		DeleteStatistic: struct {
+			Reason string `json:"reason"`
+			Note  string `json:"note"`
+		}{
+			Reason: reason,
+			Note:   note,
+		},
 	}
 
 	req, err := s.client.NewRequest(ctx, http.MethodDelete, snapshotBasePath, &deleteReq)
@@ -123,6 +145,17 @@ func (s *snapshotServiceHandler) Rollback(ctx context.Context, snapshotIdentifie
 	}
 
 	req, err := s.client.NewRequest(ctx, http.MethodPost, path, &rollbackReq)
+	if err != nil {
+		return err
+	}
+
+	return s.client.Do(ctx, req, nil)
+}
+
+func (s *snapshotServiceHandler) EnableAuto(ctx context.Context, enableReq *EnableAutoSnapshotReq) error {
+	path := fmt.Sprintf("%s/enable/auto", snapshotBasePath)
+
+	req, err := s.client.NewRequest(ctx, http.MethodPost, path, enableReq)
 	if err != nil {
 		return err
 	}
