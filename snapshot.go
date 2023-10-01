@@ -7,6 +7,7 @@ import (
 )
 
 var snapshotBasePath = "/apps/v2/snapshot"
+var snapshotsBasePath = "/apps/v2/snapshots"
 
 type SnapshotService interface {
 	List(ctx context.Context, options *ListOptions) ([]Snapshot, error)
@@ -15,6 +16,13 @@ type SnapshotService interface {
 	Rollback(ctx context.Context, snapshotIdentifier string) error
 	EnableAuto(ctx context.Context, enableReq *EnableAutoSnapshotReq) error
 	Delete(ctx context.Context, snapshotIdentifier, reason, note string) error
+	GetSnapShotPolicy(ctx context.Context, identifier string) (*SnapShotPolicy, error)
+	CreateSnapShotPolicy(ctx context.Context, createReq *CreateSnapShotPolicyReq) error
+	DeleteSnapShotPolicy(ctx context.Context, policyId, identifier string) error
+	ManageRetainSnapShotPolicy(ctx context.Context, policyId string, keep int) error
+	AttachSnapShotPolicy(ctx context.Context, policyId string, vms []string) error
+	DetachSnapShotPolicy(ctx context.Context, policyId string, vms []string) error
+	ListSnapShotPolicies(ctx context.Context, options *ListOptions) ([]SnapShotPolicyListDetail, error)
 }
 
 type snapshotServiceHandler struct {
@@ -112,15 +120,15 @@ func (s *snapshotServiceHandler) ListByVm(ctx context.Context, options *ListOpti
 func (s *snapshotServiceHandler) Delete(ctx context.Context, snapshotIdentifier, reason, note string) error {
 	deleteReq := struct {
 		SnapshotIdentifier string `json:"snapshotIdentifier"`
-		DeleteStatistic struct {
+		DeleteStatistic    struct {
 			Reason string `json:"reason"`
-			Note  string `json:"note"`
+			Note   string `json:"note"`
 		} `json:"deleteStatistic"`
 	}{
 		SnapshotIdentifier: snapshotIdentifier,
 		DeleteStatistic: struct {
 			Reason string `json:"reason"`
-			Note  string `json:"note"`
+			Note   string `json:"note"`
 		}{
 			Reason: reason,
 			Note:   note,
@@ -156,6 +164,177 @@ func (s *snapshotServiceHandler) EnableAuto(ctx context.Context, enableReq *Enab
 	path := fmt.Sprintf("%s/enable/auto", snapshotBasePath)
 
 	req, err := s.client.NewRequest(ctx, http.MethodPost, path, enableReq)
+	if err != nil {
+		return err
+	}
+
+	return s.client.Do(ctx, req, nil)
+}
+
+// snap shot policy
+type SnapShotVms struct {
+	Name       string `json:"name"`
+	Identifier string `json:"identifier"`
+	Category   string `json:"category"`
+	Fullname   string `json:"fullname"`
+	Type       string `json:"type"`
+}
+type SnapShotPolicy struct {
+	Name       string   `json:"name"`
+	Identifier string   `json:"identifier"`
+	CreatedOn  string   `json:"created_on"`
+	CreatedBy  string   `json:"created_by"`
+	BackupPlan string   `json:"backupPlan"`
+	PlanEvery  int      `json:"planEvery"`
+	Keep       int      `json:"keep"`
+	Disabled   int      `json:"disabled"`
+	UserId     int      `json:"userId"`
+	Vms        []SnapShotVms `json:"vms"`
+}
+
+type SnapShotPolicyListDetail struct {
+	Name       string `json:"name"`
+	Identifier string `json:"identifier"`
+	CreatedOn  string `json:"created_on"`
+	CreatedBy  string `json:"created_by"`
+	BackupPlan string `json:"backupPlan"`
+	PlanEvery  int    `json:"planEvery"`
+	Keep       int    `json:"keep"`
+	Disabled   int    `json:"disabled"`
+	VmsCount   int    `json:"vmsCount"`
+	UserId     int    `json:"userId"`
+}
+type ListSnapShotPoliciesRoot struct {
+	Error bool `json:"error"`
+	Data  struct {
+		Rows []SnapShotPolicyListDetail `json:"rows"`
+	} `json:"data"`
+}
+
+type GetSnapShotPolicyRoot struct {
+	Error bool           `json:"error"`
+	Data  SnapShotPolicy `json:"data"`
+}
+
+type CreateSnapShotPolicyReq struct {
+	Name       string   `json:"name"`
+	BackupPlan string   `json:"backupPlan"`
+	PlanEvery  string   `json:"planEvery"`
+	Keep       string   `json:"keep"`
+	Vms        []string `json:"vms"`
+	Tags       []string `json:"tags"`
+}
+
+func (s *snapshotServiceHandler) ListSnapShotPolicies(ctx context.Context, options *ListOptions) ([]SnapShotPolicyListDetail, error) {
+	path := fmt.Sprintf("%s/policy/all", snapshotBasePath)
+
+	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	policies := new(ListSnapShotPoliciesRoot)
+	if err = s.client.Do(ctx, req, policies); err != nil {
+		return nil, err
+	}
+
+	return policies.Data.Rows, nil
+}
+
+func (s *snapshotServiceHandler) GetSnapShotPolicy(ctx context.Context, identifier string) (*SnapShotPolicy, error) {
+	path := fmt.Sprintf("%s/policy/%s", snapshotBasePath, identifier)
+
+	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	policy := new(GetSnapShotPolicyRoot)
+	if err = s.client.Do(ctx, req, policy); err != nil {
+		return nil, err
+	}
+
+	return &policy.Data, nil
+}
+
+func (s *snapshotServiceHandler) CreateSnapShotPolicy(ctx context.Context, createReq *CreateSnapShotPolicyReq) error {
+	path := fmt.Sprintf("%s/policy/create", snapshotBasePath)
+
+	req, err := s.client.NewRequest(ctx, http.MethodPost, path, createReq)
+	if err != nil {
+		return err
+	}
+
+	return s.client.Do(ctx, req, nil)
+}
+
+func (s *snapshotServiceHandler) DeleteSnapShotPolicy(ctx context.Context, policyId, identifier string) error {
+	path := fmt.Sprintf("%s/policy/%s", snapshotBasePath, identifier)
+
+	deleteSnapShot := struct {
+		PolicyId string `json:"policyId"`
+	}{
+		PolicyId: policyId,
+	}
+
+	req, err := s.client.NewRequest(ctx, http.MethodDelete, path, deleteSnapShot)
+	if err != nil {
+		return err
+	}
+
+	return s.client.Do(ctx, req, nil)
+}
+
+func (s *snapshotServiceHandler) ManageRetainSnapShotPolicy(ctx context.Context, policyId string, keep int) error {
+	path := fmt.Sprintf("%s/policy/keep", snapshotBasePath)
+
+	manageSnapShot := struct {
+		PolicyId string `json:"policyId"`
+		Keep     int    `json:"keep"`
+	}{
+		PolicyId: policyId,
+		Keep:     keep,
+	}
+
+	req, err := s.client.NewRequest(ctx, http.MethodPost, path, manageSnapShot)
+	if err != nil {
+		return err
+	}
+
+	return s.client.Do(ctx, req, nil)
+}
+
+func (s *snapshotServiceHandler) AttachSnapShotPolicy(ctx context.Context, policyId string, vms []string) error {
+	path := fmt.Sprintf("%s/policy/attach", snapshotsBasePath)
+
+	attachSnapShot := struct {
+		PolicyId string   `json:"policyId"`
+		Vms      []string `json:"vms"`
+	}{
+		PolicyId: policyId,
+		Vms:      vms,
+	}
+
+	req, err := s.client.NewRequest(ctx, http.MethodPost, path, attachSnapShot)
+	if err != nil {
+		return err
+	}
+
+	return s.client.Do(ctx, req, nil)
+}
+
+func (s *snapshotServiceHandler) DetachSnapShotPolicy(ctx context.Context, policyId string, vms []string) error {
+	path := fmt.Sprintf("%s/policy/detach", snapshotsBasePath)
+
+	detachSnapShot := struct {
+		PolicyId string   `json:"policyId"`
+		Vms      []string `json:"vms"`
+	}{
+		PolicyId: policyId,
+		Vms:      vms,
+	}
+
+	req, err := s.client.NewRequest(ctx, http.MethodPost, path, detachSnapShot)
 	if err != nil {
 		return err
 	}
