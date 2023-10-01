@@ -15,7 +15,7 @@ type LBsService interface {
 	ListOffers(ctx context.Context, dcIdentifier string) ([]LBOffers, error)
 	GetLB(ctx context.Context, lbID string) (*LB, error)
 	CreateLB(ctx context.Context, createLBReq *CreateLBReq) error
-	DeleteLB(ctx context.Context, lbID string) error
+	DeleteLB(ctx context.Context, lbID, reason, note string) error
 	AddLBRule(ctx context.Context, addRuleReq *AddRuleReq) error
 	DeleteLBRule(ctx context.Context, ruleID string) error
 	AddLBDomain(ctx context.Context, domainAddReq *DomainAddReq) error
@@ -264,10 +264,24 @@ func (l *lbsServiceHandler) CreateLB(ctx context.Context, createLBReq *CreateLBR
 	return l.client.Do(ctx, req, nil)
 }
 
-func (l *lbsServiceHandler) DeleteLB(ctx context.Context, lbID string) error {
+func (l *lbsServiceHandler) DeleteLB(ctx context.Context, lbID, reason, note string) error {
 	path := fmt.Sprintf("%s/%s", lbPath, lbID)
 
-	req, err := l.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	delStat := struct {
+		DeleteStatistic struct {
+			Reason string `json:"reason"`
+			Note   string `json:"note"`
+		}
+	}{
+		DeleteStatistic: struct {
+			Reason string `json:"reason"`
+			Note   string `json:"note"`
+		}{
+			Reason: reason,
+			Note:   note,
+		},
+	}
+	req, err := l.client.NewRequest(ctx, http.MethodDelete, path, &delStat)
 	if err != nil {
 		return err
 	}
