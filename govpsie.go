@@ -48,6 +48,13 @@ type Client struct {
 	LB            LBsService
 	Scripts       ScriptsService
 	Pending       PendingService
+	Gateway       GatewayService
+	VPC           VPCService
+	Bucket 	  BucketService
+	K8s 		 K8sService
+	AccessToken  AccessTokenService
+	Billing BillingService
+	Monitoring MonitoringService
 }
 
 type ErrorRsp struct {
@@ -103,6 +110,14 @@ func NewClient(httpClient *http.Client) *Client {
 	c.LB = &lbsServiceHandler{client: c}
 	c.Pending = &pendingServiceHandler{client: c}
 	c.Scripts = &scriptsServiceHandler{client: c}
+	c.Gateway = &gatewayServiceHandler{client: c}
+	c.VPC = &vpcServiceHandler{client: c}
+	c.Bucket = &bucketServiceHandler{client: c}
+	c.K8s = &k8sServiceHandler{client: c}
+	c.AccessToken = &accessTokenServiceHandler{client: c}
+	c.Billing = &billingServiceHandler{client: c}
+	c.Monitoring = &monitoringServiceHandler{client: c}
+
 
 	c.headers = make(map[string]string)
 	return c
