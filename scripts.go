@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 var scriptsBasePath = "/apps/v2"
 
 type ScriptsService interface {
 	GetScripts(ctx context.Context) ([]Script, error)
-	GetScript(ctx context.Context, scriptId string) (Script, error)
+	GetScript(ctx context.Context, scriptId string) (ScriptDetail, error)
 	CreateScript(ctx context.Context, createScriptRequest *CreateScriptRequest) error
 }
 
@@ -21,9 +22,27 @@ type scriptsServiceHandler struct {
 var _ ScriptsService = &scriptsServiceHandler{}
 
 type Script struct {
-	Identifier string `json:"identifier"`
-	ScriptName string `json:"script_name"`
-	Script     string `json:"script"`
+	UserID        int       `json:"user_id"`
+	BoxID         int       `json:"box_id"`
+	BoxIdentifier string    `json:"box_identifier"`
+	ScriptName    string    `json:"script_name"`
+	Script        string    `json:"script"`
+	CreatedOn     time.Time `json:"created_on"`
+	Identifier    string    `json:"identifier"`
+	CreatedBy     string    `json:"created_by"`
+}
+
+type ScriptDetail struct {
+	ID            int       `json:"id"`
+	UserID        int       `json:"user_id"`
+	BoxID         int       `json:"box_id"`
+	BoxIdentifier string    `json:"box_identifier"`
+	Name          string    `json:"name"`
+	Script        string    `json:"script"`
+	CreatedOn     time.Time `json:"created_on"`
+	Identifier    string    `json:"identifier"`
+	ScriptName    string    `json:"script_name"`
+	Type          string    `json:"type"`
 }
 
 type CreateScriptRequest struct {
@@ -40,8 +59,8 @@ type ListScriptRoot struct {
 }
 
 type ScriptRoot struct {
-	Error bool   `json:"error"`
-	Data  Script `json:"data"`
+	Error bool         `json:"error"`
+	Data  ScriptDetail `json:"data"`
 }
 
 func (s *scriptsServiceHandler) GetScripts(ctx context.Context) ([]Script, error) {
@@ -59,16 +78,16 @@ func (s *scriptsServiceHandler) GetScripts(ctx context.Context) ([]Script, error
 	return scripts.Data, nil
 }
 
-func (s *scriptsServiceHandler) GetScript(ctx context.Context, scriptId string) (Script, error) {
+func (s *scriptsServiceHandler) GetScript(ctx context.Context, scriptId string) (ScriptDetail, error) {
 	path := fmt.Sprintf("%s/script/%s", scriptsBasePath, scriptId)
 
 	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
-		return Script{}, err
+		return ScriptDetail{}, err
 	}
 	script := new(ScriptRoot)
 	if err := s.client.Do(ctx, req, script); err != nil {
-		return Script{}, err
+		return ScriptDetail{}, err
 	}
 
 	return script.Data, nil
