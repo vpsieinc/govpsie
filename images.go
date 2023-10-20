@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 var imagesPath = "/apps/v2/custom"
@@ -13,6 +14,7 @@ type ImagesService interface {
 	List(ctx context.Context, options *ListOptions) ([]CustomImage, error)
 	CreateImages(ctx context.Context, dcIdentifier, imageName, imageUrl string) error
 	CreateServerByImage(ctx context.Context, createServerReq *CreateServerRequest) error
+	GetImage(ctx context.Context, imageIdentifier string) (*CustomImage, error)
 }
 
 type imagesServiceHandler struct {
@@ -28,20 +30,22 @@ type ListCustomImageRoot struct {
 }
 
 type CustomImage struct {
-	ID             int    `json:"id"`
-	UserID         int    `json:"user_id"`
-	DataCenterID   int    `json:"datacenter_id"`
-	ImageSize      int    `json:"image_size"`
-	OriginalName   string `json:"original_name"`
-	FetchedFromUrl string `json:"fetched_from_url"`
-	ImageHash      string `json:"image_hash"`
-	ImageLabel     string `json:"image_label"`
-	CreatedOn      string `json:"created_on"`
-	Deleted        int    `json:"deleted"`
-	Identifier     string `json:"identifier"`
-	DcName         string `json:"dc_name"`
-	DcIdentifier   string `json:"dcIdentifier"`
-	CreatedBy      string `json:"createdBy"`
+	ID             int       `json:"id"`
+	UserID         int       `json:"user_id"`
+	DatacenterID   int       `json:"datacenter_id"`
+	ImageSize      int64     `json:"image_size"`
+	OriginalName   string    `json:"original_name"`
+	FetchedFromURL string    `json:"fetched_from_url"`
+	ChangedName    string    `json:"changed_name"`
+	ImageHash      string    `json:"image_hash"`
+	ImageLabel     string    `json:"image_label"`
+	CreatedOn      time.Time `json:"created_on"`
+	Deleted        int       `json:"deleted"`
+	Identifier     string    `json:"identifier"`
+	Storage        string    `json:"storage"`
+	DcName         string    `json:"dc_name"`
+	DcIdentifier   string    `json:"dcIdentifier"`
+	CreatedBy      string    `json:"created_by"`
 }
 
 func (i *imagesServiceHandler) List(ctx context.Context, options *ListOptions) ([]CustomImage, error) {
@@ -111,4 +115,20 @@ func (i *imagesServiceHandler) CreateServerByImage(ctx context.Context, createSe
 	}
 
 	return nil
+}
+
+func (i *imagesServiceHandler) GetImage(ctx context.Context, imageIdentifier string) (*CustomImage, error) {
+	path := fmt.Sprintf("%s/images/?imageIdentifier=%s", imagesPath, imageIdentifier)
+
+	req, err := i.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	image := new(ListCustomImageRoot)
+	if err = i.client.Do(ctx, req, image); err != nil {
+		return nil, err
+	}
+
+	return &image.Data[0], nil
 }
