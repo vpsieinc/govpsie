@@ -131,7 +131,7 @@ func (i *imagesServiceHandler) GetImage(ctx context.Context, imageIdentifier str
 	}
 
 	if len(image.Data) == 0 {
-		return nil, fmt.Errorf("Image Not Found")
+		return nil, fmt.Errorf("image not found")
 	}
 
 	return &image.Data[0], nil
