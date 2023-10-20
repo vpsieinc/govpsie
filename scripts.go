@@ -13,6 +13,8 @@ type ScriptsService interface {
 	GetScripts(ctx context.Context) ([]Script, error)
 	GetScript(ctx context.Context, scriptId string) (ScriptDetail, error)
 	CreateScript(ctx context.Context, createScriptRequest *CreateScriptRequest) error
+	UpdateScript(ctx context.Context, scriptUpdateRequest *ScriptUpdateRequest) error
+	DeleteScript(ctx context.Context, scriptId string) error
 }
 
 type scriptsServiceHandler struct {
@@ -58,6 +60,13 @@ type ListScriptRoot struct {
 	Total int      `json:"total"`
 }
 
+type ScriptUpdateRequest struct {
+	Name             string `json:"name"`
+	ScriptContent    string `json:"scriptContent"`
+	ScriptIdentifier string `json:"scriptIdentifier"`
+	ScriptType       string `json:"scriptType"`
+}
+
 type ScriptRoot struct {
 	Error bool         `json:"error"`
 	Data  ScriptDetail `json:"data"`
@@ -97,6 +106,42 @@ func (s *scriptsServiceHandler) CreateScript(ctx context.Context, createScriptRe
 	path := fmt.Sprintf("%s/script/add", scriptsBasePath)
 
 	req, err := s.client.NewRequest(ctx, http.MethodPost, path, createScriptRequest)
+	if err != nil {
+		return err
+	}
+
+	if err := s.client.Do(ctx, req, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *scriptsServiceHandler) UpdateScript(ctx context.Context, scriptUpdateRequest *ScriptUpdateRequest) error {
+	path := fmt.Sprintf("%s/script/edit", scriptsBasePath)
+
+	req, err := s.client.NewRequest(ctx, http.MethodPut, path, scriptUpdateRequest)
+	if err != nil {
+		return err
+	}
+
+	if err := s.client.Do(ctx, req, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *scriptsServiceHandler) DeleteScript(ctx context.Context, scriptId string) error {
+	path := fmt.Sprintf("%s/script", scriptsBasePath)
+
+	deltReq := struct {
+		ScriptIdentifier string `json:"scriptIdentifier"`
+	}{
+		ScriptIdentifier: scriptId,
+	}
+
+	req, err := s.client.NewRequest(ctx, http.MethodDelete, path, &deltReq)
 	if err != nil {
 		return err
 	}
