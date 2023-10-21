@@ -106,8 +106,8 @@ type VmData struct {
 	CustomPrice         *int    `json:"custom_price"`
 	PayableLicense      int     `json:"payable_license"`
 	LastLicensePay      *string `json:"last_license_pay"`
-	ScriptID            *int    `json:"script_id"`
-	SshKeyID            *int    `json:"sshkey_id"`
+	ScriptID            *string `json:"script_id"`
+	SshKeyID            *string `json:"sshkey_id"`
 	IsLocked            int     `json:"is_locked"`
 	IsWorkWithNew       int     `json:"is_work_with_new_version"`
 	IsSuspended         int     `json:"is_suspended"`
