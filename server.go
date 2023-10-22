@@ -182,15 +182,15 @@ type CreateServerRequest struct {
 	OsIdentifier       string    `json:"osIdentifier"`
 	DcIdentifier       string    `json:"dcIdentifier"`
 	Hostname           string    `json:"hostname"`
-	Notes              *string   `json:"notes"`
-	BackupEnabled      *int      `json:"backupEnabled"`
-	AddPublicIpV4      *int      `json:"addPublicIpV4"`
-	AddPublicIpV6      *int      `json:"addPublicIpV6"`
-	AddPrivateIp       *int      `json:"addPrivateIp"`
-	SshKeyIdentifier   *string   `json:"sshKeyIdentifier"`
+	Notes              *string   `json:"notes,omitempty"`
+	BackupEnabled      *int      `json:"backupEnabled,omitempty"`
+	AddPublicIpV4      *int      `json:"addPublicIpV4,omitempty"`
+	AddPublicIpV6      *int      `json:"addPublicIpV6,omitempty"`
+	AddPrivateIp       *int      `json:"addPrivateIp,omitempty"`
+	SshKeyIdentifier   *string   `json:"sshKeyIdentifier,omitempty"`
 	ProjectID          int       `json:"projectId"`
-	Tags               []*string `json:"tags"`
-	ScriptIdentifier   *string   `json:"scriptIdentifier"`
+	Tags               []*string `json:"tags,omitempty"`
+	ScriptIdentifier   *string   `json:"scriptIdentifier,omitempty"`
 }
 
 type ActionRequest struct {
