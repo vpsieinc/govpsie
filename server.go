@@ -47,7 +47,7 @@ var _ ServerService = &serverServiceHandler{}
 type ListServerRoot struct {
 	Error bool     `json:"error"`
 	Data  []VmData `json:"data"`
-	Total int      `json:"total"`
+	Total int64    `json:"total"`
 }
 
 type ListServerByIdentifierRoot struct {
@@ -59,7 +59,7 @@ type ListServerByIdentifierRoot struct {
 		PrivateIpData   []PrivateIpData   `json:"privateIpData"`
 		FloatingIpData  []FloatingIpData  `json:"floatingIpData"`
 	} `json:"data"`
-	Total int `json:"total"`
+	Total int64 `json:"total"`
 }
 
 type ImageCategories struct {
@@ -72,82 +72,82 @@ type FloatingIpData struct {
 }
 
 type VmData struct {
-	ID                  int     `json:"id"`
-	UserID              int     `json:"user_id"`
-	BoxSizeID           int     `json:"boxsize_id"`
-	BoxImageID          int     `json:"boximage_id"`
-	DataCenterID        int     `json:"datacenter_id"`
-	NodeID              int     `json:"node_id"`
-	BoxdIsCountID       *int    `json:"boxdiscount_id"`
+	ID                  int64   `json:"id"`
+	UserID              int64   `json:"user_id"`
+	BoxSizeID           int64   `json:"boxsize_id"`
+	BoxImageID          int64   `json:"boximage_id"`
+	DataCenterID        int64   `json:"datacenter_id"`
+	NodeID              int64   `json:"node_id"`
+	BoxdIsCountID       *int64  `json:"boxdiscount_id"`
 	Hostname            string  `json:"hostname"`
 	DefaultIP           string  `json:"default_ip"`
 	DefaultIPv6         string  `json:"default_ipv6"`
 	PrivateIP           string  `json:"private_ip"`
-	IsAutoBackup        int     `json:"is_autobackup"`
+	IsAutoBackup        int64   `json:"is_autobackup"`
 	BoxVirtualization   string  `json:"box_virtualization_id"`
-	Ram                 int     `json:"ram"`
-	Cpu                 int     `json:"cpu"`
-	Ssd                 int     `json:"ssd"`
-	Traffic             int     `json:"traffic"`
+	Ram                 int64   `json:"ram"`
+	Cpu                 int64   `json:"cpu"`
+	Ssd                 int64   `json:"ssd"`
+	Traffic             int64   `json:"traffic"`
 	AddedIpAddresses    *string `json:"added_ip_addresses"`
 	InitialPassword     string  `json:"initial_password"`
 	Notes               *string `json:"notes"`
 	CreatedOn           string  `json:"created_on"`
 	LastUpdated         string  `json:"last_updated"`
 	DroppedOn           *string `json:"dropped_on"`
-	IsActive            int     `json:"is_active"`
-	IsDeleted           int     `json:"is_deleted"`
+	IsActive            int64   `json:"is_active"`
+	IsDeleted           int64   `json:"is_deleted"`
 	Identifier          string  `json:"identifier"`
-	Power               int     `json:"power"`
-	ProjectID           int     `json:"project_id"`
-	IsCustom            int     `json:"is_custom"`
-	NrAddedIps          int     `json:"nr_added_ips"`
-	InPcs               int     `json:"in_pcs"`
-	CustomPrice         *int    `json:"custom_price"`
-	PayableLicense      int     `json:"payable_license"`
+	Power               int64   `json:"power"`
+	ProjectID           int64   `json:"project_id"`
+	IsCustom            int64   `json:"is_custom"`
+	NrAddedIps          int64   `json:"nr_added_ips"`
+	InPcs               int64   `json:"in_pcs"`
+	CustomPrice         *int64  `json:"custom_price"`
+	PayableLicense      int64   `json:"payable_license"`
 	LastLicensePay      *string `json:"last_license_pay"`
 	ScriptID            *string `json:"script_id"`
 	SshKeyID            *string `json:"sshkey_id"`
-	IsLocked            int     `json:"is_locked"`
-	IsWorkWithNew       int     `json:"is_work_with_new_version"`
-	IsSuspended         int     `json:"is_suspended"`
-	IsTerminated        int     `json:"is_terminated"`
-	OldID               int     `json:"old_id"`
-	CustomIsoID         *int    `json:"custom_iso_id"`
-	IsIsoImageBootAble  int     `json:"is_iso_image_bootable"`
-	HasSsl              int     `json:"has_ssl"`
+	IsLocked            int64   `json:"is_locked"`
+	IsWorkWithNew       int64   `json:"is_work_with_new_version"`
+	IsSuspended         int64   `json:"is_suspended"`
+	IsTerminated        int64   `json:"is_terminated"`
+	OldID               int64   `json:"old_id"`
+	CustomIsoID         *int64  `json:"custom_iso_id"`
+	IsIsoImageBootAble  int64   `json:"is_iso_image_bootable"`
+	HasSsl              int64   `json:"has_ssl"`
 	LastActionDate      *string `json:"last_action_date,omitempty"`
-	IsCreatedFromLegacy int     `json:"is_created_from_legacy"`
-	IsSmtpAllowed       int     `json:"is_smtp_allowed"`
-	WeeklyBackup        int     `json:"weekly_backup"`
-	MonthlyBackup       int     `json:"monthly_backup"`
-	LibIsoID            *int    `json:"lib_iso_id,omitempty"`
-	DailySnapshot       int     `json:"daily_snapshot"`
-	WeeklySnapshot      int     `json:"weekly_snapshot"`
-	MonthlySnapshot     int     `json:"monthly_snap"`
-	LastActionInMin     int     `json:"last_action_in_min"`
+	IsCreatedFromLegacy int64   `json:"is_created_from_legacy"`
+	IsSmtpAllowed       int64   `json:"is_smtp_allowed"`
+	WeeklyBackup        int64   `json:"weekly_backup"`
+	MonthlyBackup       int64   `json:"monthly_backup"`
+	LibIsoID            *int64  `json:"lib_iso_id,omitempty"`
+	DailySnapshot       int64   `json:"daily_snapshot"`
+	WeeklySnapshot      int64   `json:"weekly_snapshot"`
+	MonthlySnapshot     int64   `json:"monthly_snap"`
+	LastActionInMin     int64   `json:"last_action_in_min"`
 	FirstName           string  `json:"firstname"`
 	LastName            string  `json:"lastname"`
 	Username            string  `json:"username"`
 	State               string  `json:"state"`
-	IsFipAvailable      int     `json:"is_fip_available"`
-	IsBucketAvailable   int     `json:"is_bucket_available"`
+	IsFipAvailable      int64   `json:"is_fip_available"`
+	IsBucketAvailable   int64   `json:"is_bucket_available"`
 	DcIdentifier        string  `json:"dcIdentifier"`
 	Category            string  `json:"category"`
 	FullName            string  `json:"fullname"`
 	VmDescription       string  `json:"vmDescription"`
-	BoxesSuspended      int     `json:"boxes_suspended"`
-	IsSataAvailable     int     `json:"is_sata_available"`
-	IsSsdAvailable      int     `json:"is_ssd_available"`
+	BoxesSuspended      int64   `json:"boxes_suspended"`
+	IsSataAvailable     int64   `json:"is_sata_available"`
+	IsSsdAvailable      int64   `json:"is_ssd_available"`
 	PublicIp            *string `json:"publicIp,omitempty"`
 }
 
 type Status struct {
-	Cpu            int    `json:"cpu"`
-	Ballon         int    `json:"ballon"`
-	Uptime         int    `json:"uptime"`
+	Cpu            int64  `json:"cpu"`
+	Ballon         int64  `json:"ballon"`
+	Uptime         int64  `json:"uptime"`
 	Pid            string `json:"pid"`
-	Disk           int    `json:"disk"`
+	Disk           int64  `json:"disk"`
 	RunningMachine string `json:"running-machine"`
 	RunningQemu    string `json:"running-qemu"`
 	Status         string `json:"status"`
@@ -183,12 +183,12 @@ type CreateServerRequest struct {
 	DcIdentifier       string    `json:"dcIdentifier"`
 	Hostname           string    `json:"hostname"`
 	Notes              *string   `json:"notes,omitempty"`
-	BackupEnabled      *int      `json:"backupEnabled,omitempty"`
-	AddPublicIpV4      *int      `json:"addPublicIpV4,omitempty"`
-	AddPublicIpV6      *int      `json:"addPublicIpV6,omitempty"`
-	AddPrivateIp       *int      `json:"addPrivateIp,omitempty"`
+	BackupEnabled      *int64    `json:"backupEnabled,omitempty"`
+	AddPublicIpV4      *int64    `json:"addPublicIpV4,omitempty"`
+	AddPublicIpV6      *int64    `json:"addPublicIpV6,omitempty"`
+	AddPrivateIp       *int64    `json:"addPrivateIp,omitempty"`
 	SshKeyIdentifier   *string   `json:"sshKeyIdentifier,omitempty"`
-	ProjectID          int       `json:"projectId"`
+	ProjectID          int64     `json:"projectId"`
 	Tags               []*string `json:"tags,omitempty"`
 	ScriptIdentifier   *string   `json:"scriptIdentifier,omitempty"`
 }
