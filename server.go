@@ -15,7 +15,7 @@ type ServerService interface {
 	GetServerStatusByIdentifier(context.Context, string) (*Status, error)
 	GetServerConsole(ctx context.Context, identifierId string) (*ServerConsole, error)
 	CreateServer(context.Context, *CreateServerRequest) error
-	DeleteServer(ctx context.Context, identifierId string) error
+	DeleteServer(ctx context.Context, identifierId, password, reason, note string) error
 	StartServer(ctx context.Context, identifierId string) error
 	StopServer(ctx context.Context, identifierId string) error
 	RestartServer(ctx context.Context, identifierId string) error
@@ -300,11 +300,28 @@ func (v *serverServiceHandler) CreateServer(ctx context.Context, server *CreateS
 	return nil
 }
 
-func (v *serverServiceHandler) DeleteServer(ctx context.Context, identifierId string) error {
-	vmIdentifier := &ActionRequest{
-		VmIdentifier: identifierId,
+func (v *serverServiceHandler) DeleteServer(ctx context.Context, identifierId, password, reason, note string) error {
+
+	deleteReq := struct {
+		VMIdentifier    string `json:"vmIdentifier"`
+		Password        string `json:"password"`
+		DeleteStatistic struct {
+			Reason string `json:"reason"`
+			Note   string `json:"note"`
+		} `json:"deleteStatistic"`
+	}{
+		VMIdentifier: identifierId,
+		Password:     password,
+		DeleteStatistic: struct {
+			Reason string `json:"reason"`
+			Note   string `json:"note"`
+		}{
+			Reason: reason,
+			Note:   note,
+		},
 	}
-	req, err := v.client.NewRequest(ctx, http.MethodDelete, serverBasePath, vmIdentifier)
+
+	req, err := v.client.NewRequest(ctx, http.MethodDelete, serverBasePath, deleteReq)
 	if err != nil {
 		return err
 	}
