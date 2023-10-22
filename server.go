@@ -178,19 +178,19 @@ type ServerConsole struct {
 }
 
 type CreateServerRequest struct {
-	ResourceIdentifier string   `json:"resourceIdentifier"`
-	OsIdentifier       string   `json:"osIdentifier"`
-	DcIdentifier       string   `json:"dcIdentifier"`
-	Hostname           string   `json:"hostname"`
-	Notes              string   `json:"notes"`
-	BackupEnabled      int      `json:"backupEnabled"`
-	AddPublicIpV4      int      `json:"addPublicIpV4"`
-	AddPublicIpV6      int      `json:"addPublicIpV6"`
-	AddPrivateIp       int      `json:"addPrivateIp"`
-	SshKeyIdentifier   string   `json:"sshKeyIdentifier"`
-	ProjectID          int      `json:"projectId"`
-	Tags               []string `json:"tags"`
-	ScriptIdentifier   string   `json:"scriptIdentifier"`
+	ResourceIdentifier string    `json:"resourceIdentifier"`
+	OsIdentifier       string    `json:"osIdentifier"`
+	DcIdentifier       string    `json:"dcIdentifier"`
+	Hostname           string    `json:"hostname"`
+	Notes              *string   `json:"notes"`
+	BackupEnabled      *int      `json:"backupEnabled"`
+	AddPublicIpV4      *int      `json:"addPublicIpV4"`
+	AddPublicIpV6      *int      `json:"addPublicIpV6"`
+	AddPrivateIp       *int      `json:"addPrivateIp"`
+	SshKeyIdentifier   *string   `json:"sshKeyIdentifier"`
+	ProjectID          int       `json:"projectId"`
+	Tags               []*string `json:"tags"`
+	ScriptIdentifier   *string   `json:"scriptIdentifier"`
 }
 
 type ActionRequest struct {
