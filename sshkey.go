@@ -28,12 +28,12 @@ type SshKeysGetRoot struct {
 type SshKeysListRoot struct {
 	Error bool     `json:"error"`
 	Data  []SShKey `json:"data"`
-	Total int      `json:"total"`
+	Total int64    `json:"total"`
 }
 
 type SShKey struct {
-	Id         int    `json:"id"`
-	UserId     int    `json:"user_id"`
+	Id         int64  `json:"id"`
+	UserId     int64  `json:"user_id"`
 	Name       string `json:"name"`
 	PrivateKey string `json:"private_key"`
 	CreatedOn  string `json:"created_on"`

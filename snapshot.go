@@ -23,7 +23,7 @@ type SnapshotService interface {
 	GetSnapShotPolicy(ctx context.Context, identifier string) (*SnapShotPolicy, error)
 	CreateSnapShotPolicy(ctx context.Context, createReq *CreateSnapShotPolicyReq) error
 	DeleteSnapShotPolicy(ctx context.Context, policyId, identifier string) error
-	ManageRetainSnapShotPolicy(ctx context.Context, policyId string, keep int) error
+	ManageRetainSnapShotPolicy(ctx context.Context, policyId string, keep int64) error
 	AttachSnapShotPolicy(ctx context.Context, policyId string, vms []string) error
 	DetachSnapShotPolicy(ctx context.Context, policyId string, vms []string) error
 	ListSnapShotPolicies(ctx context.Context, options *ListOptions) ([]SnapShotPolicyListDetail, error)
@@ -42,23 +42,23 @@ type Snapshot struct {
 	BackupKey    string    `json:"backupKey"`
 	State        string    `json:"state"`
 	DcIdentifier string    `json:"dcIdentifier"`
-	Daily        int       `json:"daily"`
-	IsSnapshot   int       `json:"is_snapshot"`
+	Daily        int64     `json:"daily"`
+	IsSnapshot   int64     `json:"is_snapshot"`
 	VmIdentifier string    `json:"vmIdentifier"`
 	BackupSHA1   string    `json:"backupsha1"`
-	IsDeletedVM  int       `json:"is_deleted_vm"`
+	IsDeletedVM  int64     `json:"is_deleted_vm"`
 	CreatedOn    time.Time `json:"created_on"`
 	Note         string    `json:"note"`
-	BackupSize   int       `json:"backup_size"`
+	BackupSize   int64     `json:"backup_size"`
 	DcName       string    `json:"dcName"`
-	Weekly       int       `json:"weekly"`
-	Monthly      int       `json:"monthly"`
-	BoxID        int       `json:"box_id"`
-	GlobalBackup int       `json:"global_backup"`
+	Weekly       int64     `json:"weekly"`
+	Monthly      int64     `json:"monthly"`
+	BoxID        int64     `json:"box_id"`
+	GlobalBackup int64     `json:"global_backup"`
 	OsIdentifier string    `json:"osIdentifier"`
 	OsFullName   string    `json:"osFullName"`
 	VMCategory   string    `json:"vmCategory"`
-	VMSSD        int       `json:"vmSSD"`
+	VMSSD        int64     `json:"vmSSD"`
 }
 
 type GetSnapshotRoot struct {
@@ -71,16 +71,16 @@ type GetSnapshotRoot struct {
 type ListSnapshotsRoot struct {
 	Error bool       `json:"error"`
 	Data  []Snapshot `json:"data"`
-	Total int        `json:"total"`
+	Total int64      `json:"total"`
 }
 
 type EnableAutoSnapshotReq struct {
 	VMIdentifier    string   `json:"vmIdentifier"`
-	VmId            int      `json:"vmId"`
+	VmId            int64    `json:"vmId"`
 	Period          string   `json:"period"`
-	DailySnapshot   int      `json:"dailySnapshot"`
-	WeeklySnapshot  int      `json:"weeklySnapshot"`
-	MonthlySnapshot int      `json:"monthlySnapshot"`
+	DailySnapshot   int64    `json:"dailySnapshot"`
+	WeeklySnapshot  int64    `json:"weeklySnapshot"`
+	MonthlySnapshot int64    `json:"monthlySnapshot"`
 	Tags            []string `json:"tags"`
 }
 
@@ -244,10 +244,10 @@ type SnapShotPolicy struct {
 	CreatedOn  string        `json:"created_on"`
 	CreatedBy  string        `json:"created_by"`
 	BackupPlan string        `json:"backupPlan"`
-	PlanEvery  int           `json:"planEvery"`
-	Keep       int           `json:"keep"`
-	Disabled   int           `json:"disabled"`
-	UserId     int           `json:"userId"`
+	PlanEvery  int64         `json:"planEvery"`
+	Keep       int64         `json:"keep"`
+	Disabled   int64         `json:"disabled"`
+	UserId     int64         `json:"userId"`
 	Vms        []SnapShotVms `json:"vms"`
 }
 
@@ -257,11 +257,11 @@ type SnapShotPolicyListDetail struct {
 	CreatedOn  string `json:"created_on"`
 	CreatedBy  string `json:"created_by"`
 	BackupPlan string `json:"backupPlan"`
-	PlanEvery  int    `json:"planEvery"`
-	Keep       int    `json:"keep"`
-	Disabled   int    `json:"disabled"`
-	VmsCount   int    `json:"vmsCount"`
-	UserId     int    `json:"userId"`
+	PlanEvery  int64  `json:"planEvery"`
+	Keep       int64  `json:"keep"`
+	Disabled   int64  `json:"disabled"`
+	VmsCount   int64  `json:"vmsCount"`
+	UserId     int64  `json:"userId"`
 }
 type ListSnapShotPoliciesRoot struct {
 	Error bool `json:"error"`
@@ -344,12 +344,12 @@ func (s *snapshotServiceHandler) DeleteSnapShotPolicy(ctx context.Context, polic
 	return s.client.Do(ctx, req, nil)
 }
 
-func (s *snapshotServiceHandler) ManageRetainSnapShotPolicy(ctx context.Context, policyId string, keep int) error {
+func (s *snapshotServiceHandler) ManageRetainSnapShotPolicy(ctx context.Context, policyId string, keep int64) error {
 	path := fmt.Sprintf("%s/policy/keep", snapshotBasePath)
 
 	manageSnapShot := struct {
 		PolicyId string `json:"policyId"`
-		Keep     int    `json:"keep"`
+		Keep     int64  `json:"keep"`
 	}{
 		PolicyId: policyId,
 		Keep:     keep,
