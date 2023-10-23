@@ -4,18 +4,22 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 var snapshotBasePath = "/apps/v2/snapshot"
 var snapshotsBasePath = "/apps/v2/snapshots"
+var backupBasePath = "/apps/v2/backup"
 
 type SnapshotService interface {
 	List(ctx context.Context, options *ListOptions) ([]Snapshot, error)
-	Create(ctx context.Context, name, vmIdentifier string) error
+	Create(ctx context.Context, name, vmIdentifier, note string) error
 	ListByVm(ctx context.Context, options *ListOptions, vmIdentifier string) ([]Snapshot, error)
 	Rollback(ctx context.Context, snapshotIdentifier string) error
 	EnableAuto(ctx context.Context, enableReq *EnableAutoSnapshotReq) error
 	Delete(ctx context.Context, snapshotIdentifier, reason, note string) error
+	Update(ctx context.Context, snapshotIdentifier, newNote string) error
+	Get(ctx context.Context, buckupIdentifier string) (*Snapshot, error)
 	GetSnapShotPolicy(ctx context.Context, identifier string) (*SnapShotPolicy, error)
 	CreateSnapShotPolicy(ctx context.Context, createReq *CreateSnapShotPolicyReq) error
 	DeleteSnapShotPolicy(ctx context.Context, policyId, identifier string) error
@@ -32,18 +36,36 @@ type snapshotServiceHandler struct {
 var _ SnapshotService = &snapshotServiceHandler{}
 
 type Snapshot struct {
-	Hostname     string `json:"hostname"`
-	Name         string `json:"name"`
-	Identifier   string `json:"identifier"`
-	BackupKey    string `json:"backupKey"`
-	State        string `json:"state"`
-	DcIdentifier string `json:"dcIdentifier"`
-	Daily        int    `json:"daily"`
-	IsSnapshot   int    `json:"is_snapshot"`
-	VmIdentifier string `json:"vmIdentifier"`
-	BackupSHA1   string `json:"backupsha1"`
-	OSIdentifier string `json:"os_identifier"`
-	UserID       int    `json:"user_id"`
+	Hostname     string    `json:"hostname"`
+	Name         string    `json:"name"`
+	Identifier   string    `json:"identifier"`
+	BackupKey    string    `json:"backupKey"`
+	State        string    `json:"state"`
+	DcIdentifier string    `json:"dcIdentifier"`
+	Daily        int       `json:"daily"`
+	IsSnapshot   int       `json:"is_snapshot"`
+	VmIdentifier string    `json:"vmIdentifier"`
+	BackupSHA1   string    `json:"backupsha1"`
+	IsDeletedVM  int       `json:"is_deleted_vm"`
+	CreatedOn    time.Time `json:"created_on"`
+	Note         string    `json:"note"`
+	BackupSize   int       `json:"backup_size"`
+	DcName       string    `json:"dcName"`
+	Weekly       int       `json:"weekly"`
+	Monthly      int       `json:"monthly"`
+	BoxID        int       `json:"box_id"`
+	GlobalBackup int       `json:"global_backup"`
+	OsIdentifier string    `json:"osIdentifier"`
+	OsFullName   string    `json:"osFullName"`
+	VMCategory   string    `json:"vmCategory"`
+	VMSSD        int       `json:"vmSSD"`
+}
+
+type GetSnapshotRoot struct {
+	Error bool `json:"error"`
+	Data  struct {
+		Backup Snapshot `json:"backup"`
+	} `json:"data"`
 }
 
 type ListSnapshotsRoot struct {
@@ -80,14 +102,16 @@ func (s *snapshotServiceHandler) List(ctx context.Context, options *ListOptions)
 
 }
 
-func (s *snapshotServiceHandler) Create(ctx context.Context, name, vmIdentifier string) error {
+func (s *snapshotServiceHandler) Create(ctx context.Context, name, vmIdentifier, note string) error {
 	path := fmt.Sprintf("%s/add", snapshotBasePath)
 	createSnapshotReq := struct {
 		Name         string `json:"name"`
 		VMIdentifier string `json:"vmIdentifier"`
+		Note         string `json:"note"`
 	}{
 		Name:         name,
 		VMIdentifier: vmIdentifier,
+		Note:         note,
 	}
 
 	req, err := s.client.NewRequest(ctx, http.MethodPost, path, &createSnapshotReq)
@@ -97,6 +121,41 @@ func (s *snapshotServiceHandler) Create(ctx context.Context, name, vmIdentifier 
 
 	return s.client.Do(ctx, req, nil)
 
+}
+
+func (s *snapshotServiceHandler) Get(ctx context.Context, buckupIdentifier string) (*Snapshot, error) {
+	path := fmt.Sprintf("%s/%s", backupBasePath, buckupIdentifier)
+
+	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	backup := new(GetSnapshotRoot)
+	if err = s.client.Do(ctx, req, backup); err != nil {
+		return nil, err
+	}
+
+	return &backup.Data.Backup, nil
+}
+
+func (s *snapshotServiceHandler) Update(ctx context.Context, snapshotIdentifier, newNote string) error {
+	path := "/api/v2/backups/update"
+
+	updateReq := struct {
+		Identifier string `json:"identifier"`
+		Note       string `json:"note"`
+	}{
+		Identifier: snapshotIdentifier,
+		Note:       newNote,
+	}
+
+	req, err := s.client.NewRequest(ctx, http.MethodPut, path, &updateReq)
+	if err != nil {
+		return err
+	}
+
+	return s.client.Do(ctx, req, nil)
 }
 
 func (s *snapshotServiceHandler) ListByVm(ctx context.Context, options *ListOptions, vmIdentifier string) ([]Snapshot, error) {
@@ -180,15 +239,15 @@ type SnapShotVms struct {
 	Type       string `json:"type"`
 }
 type SnapShotPolicy struct {
-	Name       string   `json:"name"`
-	Identifier string   `json:"identifier"`
-	CreatedOn  string   `json:"created_on"`
-	CreatedBy  string   `json:"created_by"`
-	BackupPlan string   `json:"backupPlan"`
-	PlanEvery  int      `json:"planEvery"`
-	Keep       int      `json:"keep"`
-	Disabled   int      `json:"disabled"`
-	UserId     int      `json:"userId"`
+	Name       string        `json:"name"`
+	Identifier string        `json:"identifier"`
+	CreatedOn  string        `json:"created_on"`
+	CreatedBy  string        `json:"created_by"`
+	BackupPlan string        `json:"backupPlan"`
+	PlanEvery  int           `json:"planEvery"`
+	Keep       int           `json:"keep"`
+	Disabled   int           `json:"disabled"`
+	UserId     int           `json:"userId"`
 	Vms        []SnapShotVms `json:"vms"`
 }
 
