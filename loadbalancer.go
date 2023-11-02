@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 )
 
 var lbPath = "/api/v1/lb"
@@ -13,7 +14,7 @@ type LBsService interface {
 	ListLBs(ctx context.Context, options *ListOptions) ([]LB, error)
 	ListLBDataCenters(ctx context.Context, options *ListOptions) ([]LBDataCenter, error)
 	ListOffers(ctx context.Context, dcIdentifier string) ([]LBOffers, error)
-	GetLB(ctx context.Context, lbID string) (*LB, error)
+	GetLB(ctx context.Context, lbID string) (*LBDetails, error)
 	CreateLB(ctx context.Context, createLBReq *CreateLBReq) error
 	DeleteLB(ctx context.Context, lbID, reason, note string) error
 	AddLBRule(ctx context.Context, addRuleReq *AddRuleReq) error
@@ -41,14 +42,62 @@ type ListLBsRoot struct {
 }
 
 type GetLBRoot struct {
-	Error bool `json:"error"`
-	Data  LB   `json:"data"`
+	Error bool      `json:"error"`
+	Data  LBDetails `json:"data"`
 }
 
 type ListLBDataCentersRoot struct {
 	Error bool           `json:"error"`
 	Data  []LBDataCenter `json:"data"`
 	Total int            `json:"total"`
+}
+
+type LBDetails struct {
+	LBName     string         `json:"lbName"`
+	Identifier string         `json:"identifier"`
+	Traffic    int            `json:"traffic"`
+	BoxsizeID  int            `json:"boxsize_id"`
+	DefaultIP  string         `json:"default_ip"`
+	DcName     string         `json:"dc_name"`
+	DcID       string         `json:"dcId"`
+	CreatedBy  string         `json:"created_by"`
+	UserID     int            `json:"user_id"`
+	Rules      []LBRuleDetail `json:"rules"`
+}
+
+type LBRuleDetail struct {
+	Scheme    string             `json:"scheme"`
+	FrontPort int                `json:"frontPort"`
+	BackPort  string             `json:"backPort"`
+	CreatedOn time.Time          `json:"created_on"`
+	RuleID    string             `json:"ruleId"`
+	Domains   []LBDomainsDetail  `json:"domains,omitempty"`
+	Backends  []LBBackendsDetail `json:"backends,omitempty"`
+}
+
+type LBBackendsDetail struct {
+	IP           string    `json:"ip"`
+	Identifier   string    `json:"identifier"`
+	VMIdentifier string    `json:"vmIdentifier,omitempty"`
+	CreatedOn    time.Time `json:"created_on"`
+}
+
+type LBDomainsDetail struct {
+	DomainName      string    `json:"domainName"`
+	BackendScheme   string    `json:"backendScheme"`
+	Subdomain       *string   `json:"subdomain,omitempty"`
+	Algorithm       string    `json:"algorithm"`
+	RedirectHTTP    int       `json:"redirectHTTP"`
+	HealthCheckPath string    `json:"healthCheckPath"`
+	CookieCheck     int       `json:"cookieCheck"`
+	CookieName      string    `json:"cookieName"`
+	CreatedOn       time.Time `json:"created_on"`
+	BackPort        int       `json:"backPort"`
+	DomainID        string    `json:"domainId"`
+	CheckInterval   int       `json:"checkInterval"`
+	FastInterval    int       `json:"fastInterval"`
+	Rise            int       `json:"rise"`
+	Fall            int       `json:"fall"`
 }
 
 type LB struct {
@@ -220,7 +269,7 @@ func (l *lbsServiceHandler) ListLBs(ctx context.Context, options *ListOptions) (
 	return listLbsRoot.Data, nil
 }
 
-func (l *lbsServiceHandler) GetLB(ctx context.Context, lbID string) (*LB, error) {
+func (l *lbsServiceHandler) GetLB(ctx context.Context, lbID string) (*LBDetails, error) {
 	path := fmt.Sprintf("%s/%s", lbPath, lbID)
 
 	req, err := l.client.NewRequest(ctx, http.MethodGet, path, nil)
