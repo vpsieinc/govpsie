@@ -68,7 +68,7 @@ type LBDetails struct {
 type LBRuleDetail struct {
 	Scheme    string             `json:"scheme"`
 	FrontPort int                `json:"frontPort"`
-	BackPort  string             `json:"backPort"`
+	BackPort  int                `json:"backPort"`
 	CreatedOn time.Time          `json:"created_on"`
 	RuleID    string             `json:"ruleId"`
 	Domains   []LBDomainsDetail  `json:"domains,omitempty"`
