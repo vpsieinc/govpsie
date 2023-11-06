@@ -317,11 +317,11 @@ func (l *lbsServiceHandler) CreateLB(ctx context.Context, createLBReq *CreateLBR
 func (l *lbsServiceHandler) DeleteLB(ctx context.Context, lbID, reason, note string) error {
 	path := fmt.Sprintf("%s/%s", lbPath, lbID)
 
-	delStat := struct {
+	deleteReq := struct {
 		DeleteStatistic struct {
 			Reason string `json:"reason"`
 			Note   string `json:"note"`
-		}
+		} `json:"deleteStatistic"`
 	}{
 		DeleteStatistic: struct {
 			Reason string `json:"reason"`
@@ -331,7 +331,8 @@ func (l *lbsServiceHandler) DeleteLB(ctx context.Context, lbID, reason, note str
 			Note:   note,
 		},
 	}
-	req, err := l.client.NewRequest(ctx, http.MethodDelete, path, &delStat)
+
+	req, err := l.client.NewRequest(ctx, http.MethodDelete, path, &deleteReq)
 	if err != nil {
 		return err
 	}
