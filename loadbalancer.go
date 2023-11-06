@@ -494,14 +494,6 @@ func (l *lbsServiceHandler) ListOffers(ctx context.Context, dcIdentifier string)
 	return offersRoot.Data, nil
 }
 
-func (l *lbsServiceHandler) AddRuleToLB(ctx context.Context, lbID string, rule *Rule) error {
-	return nil
-}
-
-func (l *lbsServiceHandler) AddDomainToRule(ctx context.Context, lbID string, domain *LBDomain) error {
-	return nil
-}
-
 func (l *lbsServiceHandler) ListPendingLBs(ctx context.Context) ([]PendingLB, error) {
 	path := fmt.Sprint("/api/v2/lbs/pending")
 
