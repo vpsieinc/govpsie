@@ -136,6 +136,7 @@ type CreateLBReq struct {
 type AddRuleReq struct {
 	Scheme    string     `json:"scheme"`
 	FrontPort string     `json:"frontPort"`
+	BackPort  string     `json:"backPort"`
 	LbId      string     `json:"lbId"`
 	Domains   []LBDomain `json:"domains"`
 }
