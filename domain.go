@@ -13,6 +13,7 @@ type DomainService interface {
 	ListDomainByProject(ctx context.Context, options *ListOptions, projectIdentifier string) ([]Domain, error)
 	DnsRecord(ctx context.Context, domainIdentifier string, dnsRecord *DnsRecord) error
 	ListDomains(ctx context.Context, options *ListOptions) ([]Domain, error)
+	ListAllDomains(ctx context.Context) ([]Domain, error)
 	ListDomainVpsies(ctx context.Context, options *ListOptions) ([]DomainVpsie, error)
 	CreateDomain(ctx context.Context, createReq *CreateDomainRequest) error
 	GetDomainByVpsie(ctx context.Context, domainIdentifier string) ([]Domain, error)
@@ -85,9 +86,9 @@ type ListDomainVpsieRoot struct {
 }
 
 type CreateDomainRequest struct {
-	VmIdentifier string `json:"vmIdentifier"`
-	Ip           string `json:"ip"`
-	Domain       string `json:"domain"`
+	VmIdentifier string   `json:"projectIdentifier"`
+	Tags         []string `json:"tags,omitempty"`
+	Domain       string   `json:"domain"`
 }
 
 type Record struct {
@@ -196,6 +197,20 @@ func (d *domainsServiceHandler) DnsRecord(ctx context.Context, domainIdentifier 
 
 func (d *domainsServiceHandler) ListDomains(ctx context.Context, options *ListOptions) ([]Domain, error) {
 	path := fmt.Sprintf("%s?offset=%d&limit=%d", domainsPath, options.Page, options.PerPage)
+
+	req, err := d.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+	domains := new(ListDomainRoot)
+	if err = d.client.Do(ctx, req, &domains); err != nil {
+		return nil, err
+	}
+	return domains.Data, nil
+}
+
+func (d *domainsServiceHandler) ListAllDomains(ctx context.Context) ([]Domain, error) {
+	path := fmt.Sprintf("%s", domainsPath)
 
 	req, err := d.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
@@ -344,7 +359,7 @@ func (d *domainsServiceHandler) ListReversePTRRecords(ctx context.Context) ([]Re
 	req, err := d.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
-	} 
+	}
 
 	rv := new(ListReversePTRRoot)
 	if err = d.client.Do(ctx, req, rv); err != nil {
