@@ -86,7 +86,7 @@ type ListDomainVpsieRoot struct {
 }
 
 type CreateDomainRequest struct {
-	VmIdentifier string   `json:"projectIdentifier"`
+	ProjectIdentifier string   `json:"projectIdentifier"`
 	Tags         []string `json:"tags,omitempty"`
 	Domain       string   `json:"domain"`
 }
