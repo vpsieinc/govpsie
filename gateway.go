@@ -14,7 +14,7 @@ type GatewayService interface {
 	Delete(ctx context.Context, ipId int) error
 	Create(ctx context.Context, createReq *CreateGatewayReq) error
 	Get(ctx context.Context, id int64) (*Gateway, error)
-	AttachVM(ctx context.Context, id int64, vms []int64, ignoreLegacyVms int64) error
+	AttachVM(ctx context.Context, id int64, vms []string, ignoreLegacyVms int64) error
 	DetachVM(ctx context.Context, id int64, mapping_id []int64) error
 }
 
@@ -136,11 +136,11 @@ func (g *gatewayServiceHandler) Get(ctx context.Context, id int64) (*Gateway, er
 	return &root.Data.Rows[0], nil
 }
 
-func (g *gatewayServiceHandler) AttachVM(ctx context.Context, id int64, vms []int64, ignoreLegacyVms int64) error {
-	path := fmt.Sprintf("%s/%d/attach/vms", gatewayPath, id)
+func (g *gatewayServiceHandler) AttachVM(ctx context.Context, id int64, vms []string, ignoreLegacyVms int64) error {
+	path := fmt.Sprintf("%s/attach/vms", gatewayPath)
 
 	attReq := struct {
-		Vms []int64 `json:"vms"`
+		Vms []string `json:"vms"`
 		IpId int64 `json:"ipId"`
 		IgnoreLegacyVms int64 `json:"ignoreLegacyVms"`
 	}{
@@ -158,7 +158,7 @@ func (g *gatewayServiceHandler) AttachVM(ctx context.Context, id int64, vms []in
 }
 
 func (g *gatewayServiceHandler) DetachVM(ctx context.Context, id int64, mapping_id []int64) error {
-	path := fmt.Sprintf("%s/%d/detach/vms", gatewayPath, id)
+	path := fmt.Sprintf("%s/detach/vms", gatewayPath)
 
 	detReq := struct {
 		MapIds []int64 `json:"mapIds"`
