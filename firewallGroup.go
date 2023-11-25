@@ -31,7 +31,7 @@ var _ FirewallGroupService = &firewallGroupServiceHandler{}
 type ListFirewallGroupsRoot struct {
 	Error bool                    `json:"error"`
 	Data  []FirewallGroupListData `json:"data"`
-	Total int                     `json:"total"`
+	Total int64                   `json:"total"`
 }
 
 type GetFirewallGroupRoot struct {
@@ -41,15 +41,15 @@ type GetFirewallGroupRoot struct {
 
 type FirewallGroupListData struct {
 	UserName      string `json:"user_name"`
-	ID            int    `json:"id"`
+	ID            int64  `json:"id"`
 	GroupName     string `json:"group_name"`
 	Identifier    string `json:"identifier"`
 	CreatedOn     string `json:"created_on"`
 	UpdatedOn     string `json:"updated_on"`
-	InboundCount  int    `json:"inbound_count"`
-	OutboundCount int    `json:"outbound_count"`
-	Vms           int    `json:"vms"`
-	CreatedBy     int    `json:"created_by"`
+	InboundCount  int64  `json:"inbound_count"`
+	OutboundCount int64  `json:"outbound_count"`
+	Vms           int64  `json:"vms"`
+	CreatedBy     int64  `json:"created_by"`
 
 	Rules   []FirewallRules `json:"rules"`
 	VmsData []VmsData       `json:"vmsData"`
@@ -74,9 +74,9 @@ type FirewallRules struct {
 }
 
 type OutBoundFirewallRules struct {
-	ID         int       `json:"id"`
-	GroupID    int       `json:"group_id"`
-	UserID     int       `json:"user_id"`
+	ID         int64     `json:"id"`
+	GroupID    int64     `json:"group_id"`
+	UserID     int64     `json:"user_id"`
 	Action     string    `json:"action"`
 	Type       string    `json:"type"`
 	Comment    string    `json:"comment"`
@@ -85,7 +85,7 @@ type OutBoundFirewallRules struct {
 	Proto      string    `json:"proto"`
 	Source     []string  `json:"source"`
 	Sport      string    `json:"sport"`
-	Enable     int       `json:"enable"`
+	Enable     int64     `json:"enable"`
 	Iface      string    `json:"iface,omitempty"`
 	Log        string    `json:"log,omitempty"`
 	Macro      string    `json:"macro,omitempty"`
@@ -95,9 +95,9 @@ type OutBoundFirewallRules struct {
 }
 
 type InBoundFirewallRules struct {
-	ID         int       `json:"id"`
-	GroupID    int       `json:"group_id"`
-	UserID     int       `json:"user_id"`
+	ID         int64     `json:"id"`
+	GroupID    int64     `json:"group_id"`
+	UserID     int64     `json:"user_id"`
 	Action     string    `json:"action"`
 	Type       string    `json:"type"`
 	Comment    string    `json:"comment"`
@@ -106,7 +106,7 @@ type InBoundFirewallRules struct {
 	Proto      string    `json:"proto"`
 	Source     []string  `json:"source,omitempty"`
 	Sport      string    `json:"sport"`
-	Enable     int       `json:"enable"`
+	Enable     int64     `json:"enable"`
 	Iface      string    `json:"iface,omitempty"`
 	Log        string    `json:"log,omitempty"`
 	Macro      string    `json:"macro,omitempty"`
@@ -117,15 +117,15 @@ type InBoundFirewallRules struct {
 
 type FirewallGroup struct {
 	UserName      string `json:"user_name"`
-	ID            int    `json:"id"`
+	ID            int64  `json:"id"`
 	GroupName     string `json:"group_name"`
 	Identifier    string `json:"identifier"`
 	CreatedOn     string `json:"created_on"`
 	UpdatedOn     string `json:"updated_on"`
-	InboundCount  int    `json:"inbound_count"`
-	OutboundCount int    `json:"outbound_count"`
-	Vms           int    `json:"vms"`
-	CreatedBy     int    `json:"created_by"`
+	InboundCount  int64  `json:"inbound_count"`
+	OutboundCount int64  `json:"outbound_count"`
+	Vms           int64  `json:"vms"`
+	CreatedBy     int64  `json:"created_by"`
 }
 
 type FirewallUpdateReq struct {
@@ -135,7 +135,7 @@ type FirewallUpdateReq struct {
 	Proto   string   `json:"proto"`
 	Source  []string `json:"source,omitempty"`
 	Sport   string   `json:"sport"`
-	Enable  int      `json:"enable"`
+	Enable  int64    `json:"enable"`
 	Macro   string   `json:"macro"`
 	Comment string   `json:"comment"`
 	Dest    []string `json:"dest,omitempty"`
