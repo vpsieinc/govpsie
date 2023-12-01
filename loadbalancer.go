@@ -83,22 +83,22 @@ type LBBackendsDetail struct {
 }
 
 type LBDomainsDetail struct {
-	DomainName      string    `json:"domainName"`
-	BackendScheme   string    `json:"backendScheme"`
-	Subdomain       *string   `json:"subdomain,omitempty"`
-	Algorithm       string    `json:"algorithm"`
-	RedirectHTTP    int       `json:"redirectHTTP"`
-	HealthCheckPath string    `json:"healthCheckPath"`
-	CookieCheck     int       `json:"cookieCheck"`
-	CookieName      string    `json:"cookieName"`
-	CreatedOn       time.Time `json:"created_on"`
-	BackPort        int       `json:"backPort"`
-	DomainID        string    `json:"domainId"`
-	CheckInterval   int       `json:"checkInterval"`
-	FastInterval    int       `json:"fastInterval"`
-	Rise            int       `json:"rise"`
-	Fall            int       `json:"fall"`
-	Backends        []Backend `json:"backends"`
+	DomainName      string             `json:"domainName"`
+	BackendScheme   string             `json:"backendScheme"`
+	Subdomain       *string            `json:"subdomain,omitempty"`
+	Algorithm       string             `json:"algorithm"`
+	RedirectHTTP    int                `json:"redirectHTTP"`
+	HealthCheckPath string             `json:"healthCheckPath"`
+	CookieCheck     int                `json:"cookieCheck"`
+	CookieName      string             `json:"cookieName"`
+	CreatedOn       time.Time          `json:"created_on"`
+	BackPort        int                `json:"backPort"`
+	DomainID        string             `json:"domainId"`
+	CheckInterval   int                `json:"checkInterval"`
+	FastInterval    int                `json:"fastInterval"`
+	Rise            int                `json:"rise"`
+	Fall            int                `json:"fall"`
+	Backends        []LBBackendsDetail `json:"backends"`
 }
 
 type LB struct {
