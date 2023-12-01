@@ -98,6 +98,7 @@ type LBDomainsDetail struct {
 	FastInterval    int       `json:"fastInterval"`
 	Rise            int       `json:"rise"`
 	Fall            int       `json:"fall"`
+	Backends        []Backend `json:"backends"`
 }
 
 type LB struct {
