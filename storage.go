@@ -148,20 +148,20 @@ type ListVmToAttachRoot struct {
 }
 
 type StorageSnapShot struct {
-	ID          int         `json:"id"`
-	StorageID   int         `json:"storage_id"`
-	Identifier  string      `json:"identifier"`
-	Name        string      `json:"name"`
-	Size        int         `json:"size"`
-	CreatedOn   time.Time   `json:"created_on"`
-	UserID      int         `json:"user_id"`
-	IsDeleted   int         `json:"is_deleted"`
-	SnapshotKey string      `json:"snapshot_key"`
-	StorageName string      `json:"storage_name"`
-	StorageType string      `json:"storage_type"`
-	DiskFormat  string      `json:"disk_format"`
-	BoxID       int `json:"box_id"`
-	EntityType  string `json:"entity_type"`
+	ID          int       `json:"id"`
+	StorageID   int       `json:"storage_id"`
+	Identifier  string    `json:"identifier"`
+	Name        string    `json:"name"`
+	Size        int       `json:"size"`
+	CreatedOn   time.Time `json:"created_on"`
+	UserID      int       `json:"user_id"`
+	IsDeleted   int       `json:"is_deleted"`
+	SnapshotKey string    `json:"snapshot_key"`
+	StorageName string    `json:"storage_name"`
+	StorageType string    `json:"storage_type"`
+	DiskFormat  string    `json:"disk_format"`
+	BoxID       int       `json:"box_id"`
+	EntityType  string    `json:"entity_type"`
 }
 
 type ListStorageSnapShotRoot struct {
@@ -271,7 +271,7 @@ func (s *storageServiceHandler) UpdateSize(ctx context.Context, storageIdentifie
 
 	updateReq := struct {
 		StorageIdentifier string `json:"storageIdentifier"`
-		Size              string    `json:"size"`
+		Size              string `json:"size"`
 	}{
 		StorageIdentifier: storageIdentifier,
 		Size:              size,
@@ -355,18 +355,20 @@ func (s *storageServiceHandler) Get(ctx context.Context, identifier string) (*St
 	}
 
 	return &storage.Data, nil
-}	
+}
 
 func (s *storageServiceHandler) ListVmsToAttach(ctx context.Context) ([]VmToAttach, error) {
 	path := fmt.Sprintf("%s/storages/vms", storageBasePath)
 
 	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
+		fmt.Printf("error in creating request: %v\n", err)
 		return nil, err
 	}
 
 	vms := new(ListVmToAttachRoot)
 	if err = s.client.Do(ctx, req, &vms); err != nil {
+		fmt.Printf("error in making the request: %v\n", err)
 		return nil, err
 	}
 
@@ -464,7 +466,6 @@ func (s *storageServiceHandler) ListSnapshots(ctx context.Context) ([]StorageSna
 	return snapshots.Data, nil
 }
 
-
 func (s *storageServiceHandler) UpdateSnapshotName(ctx context.Context, snapshotIdentifier, name string) error {
 	path := fmt.Sprintf("%s/storages/snapshot/rename", storageBasePath)
 
@@ -511,7 +512,7 @@ func (s *storageServiceHandler) CloneSnapshot(ctx context.Context, snapshotIdent
 		Type               string `json:"type"`
 	}{
 		SnapshotIdentifier: snapshotIdentifier,
-		Type: snapType,
+		Type:               snapType,
 	}
 
 	req, err := s.client.NewRequest(ctx, http.MethodPost, path, &cloneReq)
@@ -522,8 +523,8 @@ func (s *storageServiceHandler) CloneSnapshot(ctx context.Context, snapshotIdent
 	return s.client.Do(ctx, req, nil)
 }
 
-func (s *storageServiceHandler) DeleteSnapshot(ctx context.Context, snapshotIdentifier string) error  {
-	path := fmt.Sprintf("%s/storages/snapshot/delete", storageBasePath)	
+func (s *storageServiceHandler) DeleteSnapshot(ctx context.Context, snapshotIdentifier string) error {
+	path := fmt.Sprintf("%s/storages/snapshot/delete", storageBasePath)
 
 	deleteReq := struct {
 		SnapshotIdentifier string `json:"snapshotIdentifier"`

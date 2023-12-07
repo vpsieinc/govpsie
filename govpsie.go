@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -50,11 +51,11 @@ type Client struct {
 	Pending       PendingService
 	Gateway       GatewayService
 	VPC           VPCService
-	Bucket 	  BucketService
-	K8s 		 K8sService
-	AccessToken  AccessTokenService
-	Billing BillingService
-	Monitoring MonitoringService
+	Bucket        BucketService
+	K8s           K8sService
+	AccessToken   AccessTokenService
+	Billing       BillingService
+	Monitoring    MonitoringService
 }
 
 type ErrorRsp struct {
@@ -117,7 +118,6 @@ func NewClient(httpClient *http.Client) *Client {
 	c.AccessToken = &accessTokenServiceHandler{client: c}
 	c.Billing = &billingServiceHandler{client: c}
 	c.Monitoring = &monitoringServiceHandler{client: c}
-
 
 	c.headers = make(map[string]string)
 	return c
@@ -198,14 +198,24 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 
 	defer res.Body.Close()
 
+	fmt.Println("Response Status: ", res.Status)
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return err
 	}
 
+	fmt.Printf("Response: %s\n", string(body))
+
+	if res.StatusCode == http.StatusNoContent {
+		fmt.Println("No Content")
+		return nil
+	}
+
 	if res.StatusCode < http.StatusOK || res.StatusCode >= 300 {
+		fmt.Println("Error Marshalling")
 		var errRsp ErrorRsp
 		if err := json.Unmarshal(body, &errRsp); err != nil {
+			fmt.Printf("Unmarshal error: %s", err)
 			return err
 		}
 
@@ -213,10 +223,14 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 	}
 
 	if v != nil {
+		fmt.Println("Normal Marshalling")
 		if err := json.Unmarshal(body, v); err != nil {
+			fmt.Printf("Unmarshal error for body: %s", err)
 			return err
 		}
 	}
+
+	fmt.Printf("All Good")
 
 	return nil
 }
