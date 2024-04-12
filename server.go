@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 var serverBasePath = "/apps/v2/vm"
@@ -36,6 +37,10 @@ type ServerService interface {
 	Resume(ctx context.Context, resumeReq *ResumeReq) error
 	ResetNetwork(ctx context.Context, vmIdentifier string) error
 	EditTag(ctx context.Context, tags []string, vmIdentifer string) error
+	ResetAllFirewalls(ctx context.Context) error
+	ListVirtualMachines(ctx context.Context) ([]VirtualMachine, error)
+	ListAllNodesOfUser(ctx context.Context) ([]VmData, error)
+	CheckAgentStatus(ctx context.Context, vmIdentifier string) (bool, error)
 }
 
 type serverServiceHandler struct {
@@ -70,7 +75,6 @@ type PrivateIpData struct {
 }
 type FloatingIpData struct {
 }
-
 type VmData struct {
 	ID                  int64   `json:"id"`
 	UserID              int64   `json:"user_id"`
@@ -140,6 +144,7 @@ type VmData struct {
 	IsSataAvailable     int64   `json:"is_sata_available"`
 	IsSsdAvailable      int64   `json:"is_ssd_available"`
 	PublicIp            *string `json:"publicIp,omitempty"`
+	VMType              string  `json:"vmType,omitempty"`
 }
 
 type Status struct {
@@ -211,6 +216,52 @@ type ResumeReq struct {
 	HostName         string `json:"hostname"`
 	Password         string `json:"password"`
 	IsOnPremise      bool   `json:"isOnPremise"`
+}
+
+type ListAllNodesOfUserRoot struct {
+	Error bool     `json:"error"`
+	Data  []VmData `json:"data"`
+}
+
+type VirtualMachine struct {
+	Hostname          string      `json:"hostname"`
+	ID                int         `json:"id"`
+	Identifier        string      `json:"identifier"`
+	DefaultIP         string      `json:"default_ip"`
+	DefaultIpv6       string      `json:"default_ipv6"`
+	RAM               int         `json:"ram"`
+	CPU               int         `json:"cpu"`
+	Ssd               int         `json:"ssd"`
+	IsSuspended       int         `json:"is_suspended"`
+	IsLocked          int         `json:"is_locked"`
+	IsActive          int         `json:"is_active"`
+	CreatedOn         time.Time   `json:"created_on"`
+	UserID            int         `json:"user_id"`
+	PrivateIP         interface{} `json:"private_ip"`
+	Power             int         `json:"power"`
+	Traffic           int         `json:"traffic"`
+	IsAgentActive     int         `json:"is_agent_active"`
+	Firstname         string      `json:"firstname"`
+	Lastname          string      `json:"lastname"`
+	Username          string      `json:"username"`
+	Category          string      `json:"category"`
+	Fullname          string      `json:"fullname"`
+	APIConfID         string      `json:"api_conf_id"`
+	VMDescription     string      `json:"vmDescription"`
+	State             string      `json:"state"`
+	IsFipAvailable    int         `json:"is_fip_available"`
+	IsBucketAvailable int         `json:"is_bucket_available"`
+	DcIdentifier      string      `json:"dcIdentifier"`
+}
+
+type ListVirtualMachineRoot struct {
+	Error bool             `json:"error"`
+	Data  []VirtualMachine `json:"data"`
+}
+
+type AgentStatus struct {
+	Error bool `json:"error"`
+	Data  bool `json:"data"`
 }
 
 func (v *serverServiceHandler) ListServer(ctx context.Context, options *ListOptions, projectId string) ([]VmData, error) {
@@ -719,4 +770,62 @@ func (v *serverServiceHandler) EditTag(ctx context.Context, tags []string, vmIde
 	}
 
 	return nil
+}
+
+func (v *serverServiceHandler) ListVirtualMachines(ctx context.Context) ([]VirtualMachine, error) {
+	path := "/apps/v2/virtualMachines"
+	req, err := v.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	vms := new(ListVirtualMachineRoot)
+
+	if err = v.client.Do(ctx, req, &vms); err != nil {
+		return nil, err
+	}
+
+	return vms.Data, nil
+}
+
+func (v *serverServiceHandler) ListAllNodesOfUser(ctx context.Context) ([]VmData, error) {
+	path := "/apps/v2/vms/all/user"
+	req, err := v.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	nodes := new(ListAllNodesOfUserRoot)
+
+	if err = v.client.Do(ctx, req, &nodes); err != nil {
+		return nil, err
+	}
+
+	return nodes.Data, nil
+}
+
+func (v *serverServiceHandler) CheckAgentStatus(ctx context.Context, vmIdentifier string) (bool, error) {
+	path := fmt.Sprintf("%s/live/agent/status/%s", serverBasePath, vmIdentifier)
+	req, err := v.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return false, err
+	}
+
+	status := new(AgentStatus)
+
+	if err = v.client.Do(ctx, req, &status); err != nil {
+		return false, err
+	}
+
+	return status.Data, nil
+}
+
+func (v *serverServiceHandler) ResetAllFirewalls(ctx context.Context) error {
+	path := fmt.Sprintf("%s/reset/firewall/for/all", serverBasePath)
+	req, err := v.client.NewRequest(ctx, http.MethodPost, path, nil)
+	if err != nil {
+		return err
+	}
+
+	return v.client.Do(ctx, req, nil)
 }

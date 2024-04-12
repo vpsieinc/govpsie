@@ -42,7 +42,7 @@ type GetVPCRoot struct {
 
 type AssignServerReq struct {
 	VmIdentifier string `json:"vmIdentifier"`
-	VpcID         int    `json:"vpcId"`
+	VpcID        int    `json:"vpcId"`
 	DcIdentifier string `json:"dcIdentifier"`
 }
 
@@ -150,7 +150,7 @@ func (s *vpcServiceHandler) ReleasePrivateIP(ctx context.Context, vmIdentifer st
 
 	realseReq := struct {
 		VmIdentifier string `json:"vmIdentifier"`
-		PrivateIpId  int `json:"privateIpId"`
+		PrivateIpId  int    `json:"privateIpId"`
 	}{
 		VmIdentifier: vmIdentifer,
 		PrivateIpId:  privateIpId,
@@ -167,7 +167,15 @@ func (s *vpcServiceHandler) ReleasePrivateIP(ctx context.Context, vmIdentifer st
 func (s *vpcServiceHandler) DeleteVpc(ctx context.Context, vpcId, reason, note string) error {
 	path := fmt.Sprintf("%s/vpc/%s", vpcPath, vpcId)
 
-	req, err := s.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteReq := struct {
+		Reason string `json:"reason"`
+		Note   string `json:"note"`
+	}{
+		Reason: reason,
+		Note:   note,
+	}
+
+	req, err := s.client.NewRequest(ctx, http.MethodDelete, path, &deleteReq)
 	if err != nil {
 		return err
 	}

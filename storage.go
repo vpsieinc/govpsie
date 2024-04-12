@@ -31,6 +31,7 @@ type StorageService interface {
 	DeleteSnapshot(ctx context.Context, snapshotIdentifier string) error
 	DeleteAllSnapshots(ctx context.Context, storageIdentifier string) error
 	Get(ctx context.Context, identifier string) (*StorageDetail, error)
+	ListStorageDataCenter(ctx context.Context) ([]DataCenter, error)
 }
 
 type storageServiceHandler struct {
@@ -168,6 +169,11 @@ type ListStorageSnapShotRoot struct {
 	Error bool              `json:"error"`
 	Data  []StorageSnapShot `json:"data"`
 	Total int               `json:"total"`
+}
+
+type ListStorageDataCenterRoot struct {
+	Error bool         `json:"error"`
+	Data  []DataCenter `json:"data"`
 }
 
 func (s *storageServiceHandler) List(ctx context.Context, options *ListOptions) ([]Storage, error) {
@@ -555,4 +561,21 @@ func (s *storageServiceHandler) DeleteAllSnapshots(ctx context.Context, storageI
 	}
 
 	return s.client.Do(ctx, req, nil)
+}
+
+func (s *storageServiceHandler) ListStorageDataCenter(ctx context.Context) ([]DataCenter, error) {
+	path := fmt.Sprintf("%s/storage/datacenter", storageBasePath)
+
+	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	dataCenters := new(ListStorageDataCenterRoot)
+
+	if err = s.client.Do(ctx, req, dataCenters); err != nil {
+		return nil, err
+	}
+
+	return dataCenters.Data, nil
 }

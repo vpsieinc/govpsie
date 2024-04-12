@@ -18,6 +18,7 @@ type ProjectsService interface {
 	AssignToVms(ctx context.Context, projectIdentifier, projectId string) error
 	ListDomains(ctx context.Context, projectIdentifier string) ([]Domain, error)
 	Delete(ctx context.Context, id string) error
+	ListUserLimits(ctx context.Context) ([]UserLimit, error)
 }
 
 type projectsServiceHandler struct {
@@ -56,6 +57,20 @@ type Data struct {
 type ProjectRoot struct {
 	Error   bool     `json:"error"`
 	Project *Project `json:"data"`
+}
+
+type ListUserLimitRoot struct {
+	Error bool        `json:"error"`
+	Data  []UserLimit `json:"data"`
+}
+
+type UserLimit struct {
+	BackupsLimit      int `json:"backups_Limit"`
+	SnapshotLimit     int `json:"snapshot_Limit"`
+	FirewallLimit     int `json:"firewall_Limit"`
+	BucketsLimit      int `json:"buckets_Limit"`
+	CertificatesLimit int `json:"certificates_Limit"`
+	DNSDomainsLimit   int `json:"dns_domains_Limit"`
 }
 
 func (p *projectsServiceHandler) List(ctx context.Context, options *ListOptions) ([]Project, error) {
@@ -192,4 +207,21 @@ func (p *projectsServiceHandler) Delete(ctx context.Context, id string) error {
 	}
 
 	return p.client.Do(ctx, req, nil)
+}
+
+func (p *projectsServiceHandler) ListUserLimits(ctx context.Context) ([]UserLimit, error) {
+	path := "/apps/v2/profile/product/limits"
+
+	req, err := p.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	limits := new(ListUserLimitRoot)
+
+	if err = p.client.Do(ctx, req, limits); err != nil {
+		return nil, err
+	}
+
+	return limits.Data, nil
 }
