@@ -1,4 +1,4 @@
-module sample
+module github.com/vpsie/govpsie
 
 go 1.21.4
 
