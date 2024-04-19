@@ -168,11 +168,18 @@ func (s *vpcServiceHandler) DeleteVpc(ctx context.Context, vpcId, reason, note s
 	path := fmt.Sprintf("%s/vpc/%s", vpcPath, vpcId)
 
 	deleteReq := struct {
-		Reason string `json:"reason"`
-		Note   string `json:"note"`
+		DeleteStatistic struct {
+			Reason string `json:"reason"`
+			Note   string `json:"note"`
+		} `json:"deleteStatistic"`
 	}{
-		Reason: reason,
-		Note:   note,
+		DeleteStatistic: struct {
+			Reason string `json:"reason"`
+			Note   string `json:"note"`
+		}{
+			Reason: reason,
+			Note:   note,
+		},
 	}
 
 	req, err := s.client.NewRequest(ctx, http.MethodDelete, path, &deleteReq)

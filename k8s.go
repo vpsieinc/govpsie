@@ -284,7 +284,7 @@ func (s *k8sServiceHandler) DeleteK8sGroup(ctx context.Context, groupId string, 
 		DeleteStatistic struct {
 			Reason string `json:"reason"`
 			Note   string `json:"note"`
-		}
+		} `json:"deleteStatistic"`
 	}{
 		DeleteStatistic: struct {
 			Reason string `json:"reason"`
