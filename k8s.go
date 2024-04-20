@@ -98,26 +98,26 @@ type CreateK8sReq struct {
 }
 
 type K8sGroup struct {
-	ID           int         `json:"id"`
-	GroupName    string      `json:"group_name"`
-	UserID       int         `json:"user_id"`
-	BoxsizeID    int         `json:"boxsize_id"`
-	DatacenterID int         `json:"datacenter_id"`
-	RAM          int         `json:"ram"`
-	CPU          int         `json:"cpu"`
-	Ssd          int         `json:"ssd"`
-	Traffic      int         `json:"traffic"`
-	Notes        string      `json:"notes,omitempty"`
-	CreatedOn    time.Time   `json:"created_on"`
-	LastUpdated  time.Time   `json:"last_updated"`
-	DroppedOn    interface{} `json:"dropped_on,omitempty"`
-	IsActive     int         `json:"is_active"`
-	IsDeleted    int         `json:"is_deleted"`
-	Identifier   string      `json:"identifier"`
-	ProjectID    int         `json:"project_id"`
-	ClusterID    int         `json:"cluster_id"`
-	NodesCount   int         `json:"nodes_count"`
-	DcIdentifier string      `json:"dcIdentifier"`
+	ID           int64     `json:"id"`
+	GroupName    string    `json:"group_name"`
+	UserID       int64     `json:"user_id"`
+	BoxsizeID    int64     `json:"boxsize_id"`
+	DatacenterID int64     `json:"datacenter_id"`
+	RAM          int64     `json:"ram"`
+	CPU          int64     `json:"cpu"`
+	Ssd          int64     `json:"ssd"`
+	Traffic      int64     `json:"traffic"`
+	Notes        string    `json:"notes,omitempty"`
+	CreatedOn    time.Time `json:"created_on"`
+	LastUpdated  time.Time `json:"last_updated"`
+	DroppedOn    time.Time `json:"dropped_on,omitempty"`
+	IsActive     int64     `json:"is_active"`
+	IsDeleted    int64     `json:"is_deleted"`
+	Identifier   string    `json:"identifier"`
+	ProjectID    int64     `json:"project_id"`
+	ClusterID    int64     `json:"cluster_id"`
+	NodesCount   int64     `json:"nodes_count"`
+	DcIdentifier string    `json:"dcIdentifier"`
 }
 
 type ListK8sGroupRoot struct {
