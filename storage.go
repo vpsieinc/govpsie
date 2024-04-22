@@ -123,6 +123,7 @@ type StorageCreateRequest struct {
 	StorageType  string `json:"storageType"`
 	DiskFormat   string `json:"diskFormat"`
 	IsAutomatic  int    `json:"isAutomatic"`
+	K8sTrials    int    `json:"k8sTrials"`
 }
 
 type VmToAttach struct {
