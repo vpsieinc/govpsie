@@ -24,7 +24,7 @@ type StorageService interface {
 	UpdateSize(ctx context.Context, storageIdentifier, size string) error
 	UpdateName(ctx context.Context, storageIdentifier, name string) error
 	CreateSnapshot(ctx context.Context, storageIdentifier, name, storageType string) error
-	ListSnapshots(ctx context.Context) ([]StorageSnapShot, error)
+	ListSnapshots(ctx context.Context, options *ListOptions) ([]StorageSnapShot, error)
 	UpdateSnapshotName(ctx context.Context, snapshotIdentifier, name string) error
 	RollbackSnapshot(ctx context.Context, snapshotIdentifier, snapType string) error
 	CloneSnapshot(ctx context.Context, snapshotIdentifier, snapType string) error
@@ -457,8 +457,8 @@ func (s *storageServiceHandler) CreateSnapshot(ctx context.Context, storageIdent
 	return s.client.Do(ctx, req, nil)
 }
 
-func (s *storageServiceHandler) ListSnapshots(ctx context.Context) ([]StorageSnapShot, error) {
-	path := fmt.Sprintf("%s/storage/snapshots", storageBasePath)
+func (s *storageServiceHandler) ListSnapshots(ctx context.Context, options *ListOptions) ([]StorageSnapShot, error) {
+	path := fmt.Sprintf("%s/storage/snapshots?offset=%s&limit=%s", storageBasePath, options.Page, options.PerPage)
 
 	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
