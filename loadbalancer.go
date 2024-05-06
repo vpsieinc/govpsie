@@ -159,6 +159,7 @@ type LBDomain struct {
 type Backend struct {
 	Ip           string `json:"ip"`
 	VmIdentifier string `json:"vmIdentifier"`
+	Type         string `json:"type,omitempty"`
 }
 
 type LBDataCenter struct {
