@@ -119,19 +119,19 @@ type LB struct {
 }
 
 type CreateLBReq struct {
-	Algorithm  string `json:"algorithm"`
-	CookieName string `json:"cookieName"`
-	// HealthCheckPath    string `json:"healthCheckPath"`
+	Algorithm          string `json:"algorithm"`
+	CookieName         string `json:"cookieName"`
+	HealthCheckPath    string `json:"healthCheckPath,omitempty"`
 	CookieCheck        bool   `json:"cookieCheck"`
 	RedirectHTTP       int    `json:"redirectHTTP"`
 	LBName             string `json:"lbName"`
 	ResourceIdentifier string `json:"resourceIdentifier"`
 	DcIdentifier       string `json:"dcIdentifier"`
 	Rule               []Rule `json:"rules"`
-	// CheckInterval      int    `json:"checkInterval"`
-	// FastInterval       int    `json:"fastInterval"`
-	// Rise               int    `json:"rise"`
-	// Fall               int    `json:"fall"`
+	CheckInterval      int    `json:"checkInterval,omitempty"`
+	FastInterval       int    `json:"fastInterval,omitempty"`
+	Rise               int    `json:"rise,omitempty"`
+	Fall               int    `json:"fall,omitempty"`
 }
 
 type AddRuleReq struct {
