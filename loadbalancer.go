@@ -132,7 +132,7 @@ type CreateLBReq struct {
 	FastInterval       int    `json:"fastInterval,omitempty"`
 	Rise               int    `json:"rise,omitempty"`
 	Fall               int    `json:"fall,omitempty"`
-	VpcID              int    `json:"vpcId:omitempty"`
+	VpcID              int    `json:"vpcId,omitempty"`
 }
 
 type AddRuleReq struct {
