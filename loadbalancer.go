@@ -132,6 +132,7 @@ type CreateLBReq struct {
 	FastInterval       int    `json:"fastInterval,omitempty"`
 	Rise               int    `json:"rise,omitempty"`
 	Fall               int    `json:"fall,omitempty"`
+	PrivateLB          bool   `json:"privatelb,omitempty"`
 	VpcID              int    `json:"vpcId,omitempty"`
 }
 
