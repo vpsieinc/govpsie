@@ -103,7 +103,7 @@ type VmData struct {
 	IsDeleted           int64   `json:"is_deleted"`
 	Identifier          string  `json:"identifier"`
 	Power               int64   `json:"power"`
-	ProjectID           int64   `json:"project_id"`
+	ProjectID          string   `json:"projectId"`
 	IsCustom            int64   `json:"is_custom"`
 	NrAddedIps          int64   `json:"nr_added_ips"`
 	InPcs               int64   `json:"in_pcs"`
@@ -829,3 +829,4 @@ func (v *serverServiceHandler) ResetAllFirewalls(ctx context.Context) error {
 
 	return v.client.Do(ctx, req, nil)
 }
+
