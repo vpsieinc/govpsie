@@ -1,3 +1,5 @@
+package govpsie
+
 import (
 	"context"
 	"fmt"
@@ -5,7 +7,7 @@ import (
 	"time"
 )
 
-var serverBasePath = "/apps/v2/vm"
+var serverBasePath = "/api/v2/vm"
 
 type ServerService interface {
 	ListServer(context.Context, *ListOptions, string) ([]VmData, error)
@@ -187,11 +189,17 @@ type CreateServerRequest struct {
 	Hostname           string    `json:"hostname"`
 	Notes              *string   `json:"notes,omitempty"`
 	BackupEnabled      *int64    `json:"backupEnabled,omitempty"`
+	WeeklyBackupEnabled  string  `json:"weeklyBackupEnabled,omitempty"`
+	MonthlyBackupEnabled string  `json:"monthlyBackupEnabled,omitempty"`
 	AddPublicIpV4      *int64    `json:"addPublicIpV4,omitempty"`
 	AddPublicIpV6      *int64    `json:"addPublicIpV6,omitempty"`
 	AddPrivateIp       *int64    `json:"addPrivateIp,omitempty"`
 	SshKeyIdentifier   *string   `json:"sshKeyIdentifier,omitempty"`
-        ProjectID          string    `json:"projectId"`	
+	ProjectID          string    `json:"projectId"`
+	VmPassword         string    `json:"vmPassword,omitempty"`
+	ProcessID          string    `json:"processId,omitempty"`
+	IsGeneratedPassword int      `json:"isGeneratedPassword,omitempty"`
+	CreateFromPool     string    `json:"createFromPool,omitempty"`
 	Tags               []*string `json:"tags,omitempty"`
 	ScriptIdentifier   *string   `json:"scriptIdentifier,omitempty"`
 }
