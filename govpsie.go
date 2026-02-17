@@ -215,6 +215,20 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 		return errors.New(errRsp.Message)
 	}
 
+	// VPSie API may return HTTP 200 with {"error":true,"message":"..."} in body.
+	// Check for this case before unmarshaling into the target struct.
+	var apiErr struct {
+		Error   bool   `json:"error"`
+		Message string `json:"message"`
+	}
+	if err := json.Unmarshal(body, &apiErr); err == nil && apiErr.Error {
+		msg := apiErr.Message
+		if msg == "" {
+			msg = "VPSie API returned error with HTTP 200"
+		}
+		return errors.New(msg)
+	}
+
 	if v != nil {
 		if err := json.Unmarshal(body, v); err != nil {
 			return err
