@@ -188,12 +188,12 @@ type CreateServerRequest struct {
 	DcIdentifier       string    `json:"dcIdentifier"`
 	Hostname           string    `json:"hostname"`
 	Notes              *string   `json:"notes,omitempty"`
-	BackupEnabled      *int64    `json:"backupEnabled,omitempty"`
+	BackupEnabled        string  `json:"backupEnabled,omitempty"`
 	WeeklyBackupEnabled  string  `json:"weeklyBackupEnabled,omitempty"`
 	MonthlyBackupEnabled string  `json:"monthlyBackupEnabled,omitempty"`
-	AddPublicIpV4      *int64    `json:"addPublicIpV4,omitempty"`
-	AddPublicIpV6      *int64    `json:"addPublicIpV6,omitempty"`
-	AddPrivateIp       *int64    `json:"addPrivateIp,omitempty"`
+	AddPublicIpV4        string  `json:"addPublicIpV4,omitempty"`
+	AddPublicIpV6        string  `json:"addPublicIpV6,omitempty"`
+	AddPrivateIp         string  `json:"addPrivateIp,omitempty"`
 	SshKeyIdentifier   *string   `json:"sshKeyIdentifier,omitempty"`
 	ProjectID          string    `json:"projectId"`
 	VmPassword         string    `json:"vmPassword,omitempty"`
