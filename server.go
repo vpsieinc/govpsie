@@ -202,6 +202,7 @@ type CreateServerRequest struct {
 	CreateFromPool     string    `json:"createFromPool,omitempty"`
 	Tags               []*string `json:"tags,omitempty"`
 	ScriptIdentifier   *string   `json:"scriptIdentifier,omitempty"`
+	UserData           string    `json:"userData,omitempty"`
 }
 
 type ActionRequest struct {
