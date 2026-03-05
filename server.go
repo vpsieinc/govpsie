@@ -203,6 +203,24 @@ type CreateServerRequest struct {
 	Tags               []*string `json:"tags,omitempty"`
 	ScriptIdentifier   *string   `json:"scriptIdentifier,omitempty"`
 	UserData           string    `json:"userData,omitempty"`
+	Ssd                int       `json:"ssd,omitempty"`
+}
+
+// ResourcePlan represents a VPSie resource/plan with its allocated resources.
+type ResourcePlan struct {
+	CPU        int    `json:"cpu"`
+	RAM        int    `json:"ram"`
+	Ssd        int    `json:"ssd"`
+	Traffic    int    `json:"traffic"`
+	Price      int    `json:"price"`
+	Nickname   string `json:"nickname"`
+	Identifier string `json:"identifier"`
+	NetSpeed   int    `json:"net_speed"`
+}
+
+type ListResourcePlanRoot struct {
+	Error bool           `json:"error"`
+	Data  []ResourcePlan `json:"data"`
 }
 
 type ActionRequest struct {
