@@ -26,6 +26,7 @@ type ServerService interface {
 	MoveVPC(ctx context.Context, request *VpcRequest) error
 	AddTags(ctx context.Context, identifierId string, tags []string) error
 	ResizeServer(ctx context.Context, identifierId, cpu, ram string) error
+	ResizeDisk(ctx context.Context, identifierId string, ssd int) error
 	AddSsh(ctx context.Context, identifierId, sshKeyIdentifier string) error
 	AddScript(ctx context.Context, identifierId, scriptIdentifier string) error
 	Lock(ctx context.Context, identifierId string) error
@@ -548,6 +549,30 @@ func (v *serverServiceHandler) ResizeServer(ctx context.Context, identifierId, c
 	}
 
 	req, err := v.client.NewRequest(ctx, http.MethodPost, path, resizeServer)
+	if err != nil {
+		return err
+	}
+
+	if err = v.client.Do(ctx, req, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ResizeDisk resizes only the disk (SSD) of a VM. The VM must be stopped.
+func (v *serverServiceHandler) ResizeDisk(ctx context.Context, identifierId string, ssd int) error {
+	path := fmt.Sprintf("%s/resize", serverBasePath)
+
+	resizeReq := struct {
+		VmIdentifier string `json:"vmIdentifier"`
+		Ssd          int    `json:"ssd"`
+	}{
+		VmIdentifier: identifierId,
+		Ssd:          ssd,
+	}
+
+	req, err := v.client.NewRequest(ctx, http.MethodPost, path, resizeReq)
 	if err != nil {
 		return err
 	}
