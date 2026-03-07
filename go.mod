@@ -1,6 +1,6 @@
 module github.com/vpsieinc/govpsie
 
-go 1.21.4
+go 1.25.0
 
 require golang.org/x/oauth2 v0.15.0
 
