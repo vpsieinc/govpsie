@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -151,6 +152,11 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	u, err := c.BaseURL.Parse(urlStr)
 	if err != nil {
 		return nil, err
+	}
+
+	// Prevent SSRF: ensure the resolved URL targets the same host as BaseURL.
+	if u.Host != c.BaseURL.Host {
+		return nil, fmt.Errorf("request URL host %q does not match base URL host %q", u.Host, c.BaseURL.Host)
 	}
 
 	var req *http.Request
