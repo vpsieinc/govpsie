@@ -180,6 +180,7 @@ type RuleUpdateReq struct {
 	BackPort  int       `json:"backPort"`
 	Scheme    string    `json:"scheme"`
 	FrontPort int       `json:"frontPort"`
+	ProxyMode int       `json:"proxy_mode"`
 }
 
 type LBOffers struct {
